@@ -15,6 +15,21 @@ The approach combines:
 - **IC-LoRA**: In-Context LoRA for trajectory conditioning
 - **Trajectory Fields**: Dense 3D motion representations (inspired by Trace Anything)
 
+## 🚀 RunPod Deployment
+
+**NEW**: This system is fully optimized for RunPod!
+
+- **Quick Start**: See [RUNPOD_QUICKSTART.md](RUNPOD_QUICKSTART.md) for 5-minute setup
+- **Full Guide**: See [RUNPOD_DEPLOYMENT.md](RUNPOD_DEPLOYMENT.md) for complete documentation
+- **Interactive Launcher**: Use `./scripts/runpod_launcher.sh` for menu-driven interface
+- **Jupyter Notebooks**: Ready-to-use notebooks in `notebooks/` directory
+- **Optimized Configs**: Configs for 24GB, 48GB, and 80GB GPUs
+
+```bash
+# One-command setup on RunPod
+cd /workspace && bash <(wget -qO- https://raw.githubusercontent.com/your-repo/LTX_video_training/main/runpod_setup.sh)
+```
+
 ## Features
 
 ✅ **High-Quality Training Pipeline**
