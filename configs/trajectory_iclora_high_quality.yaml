@@ -1,0 +1,304 @@
+# High-Quality IC-LoRA Training Configuration for Trajectory-Guided LTX Video
+# This config enables motion-guided img2video using trajectory field conditioning
+
+# Model Configuration
+model:
+  model_name: "Lightricks/LTX-Video"
+  model_version: "LTXV_13B_097_DEV"  # 13B model for best quality
+  pretrained_model_name_or_path: "Lightricks/LTX-Video"
+  variant: "bf16"  # Use bfloat16 for better precision
+  cache_dir: "./models"
+
+  # Training mode
+  training_mode: "iclora"  # IC-LoRA for trajectory conditioning
+
+  # Transformer configuration
+  transformer:
+    load_in_8bit: false  # Set to true for 24GB GPUs
+    enable_gradient_checkpointing: true
+    enable_slicing: true
+    enable_tiling: true
+
+  # VAE configuration
+  vae:
+    load_in_8bit: true  # Save memory
+    enable_slicing: true
+    enable_tiling: true
+
+  # Text encoder configuration
+  text_encoder:
+    load_in_8bit: true
+    load_in_4bit: false
+
+# LoRA Configuration
+lora:
+  rank: 256  # High rank for complex motion patterns
+  alpha: 256  # Match rank for 1:1 scaling
+  dropout: 0.1  # Regularization
+  bias: "none"
+  target_modules:
+    # Attention layers
+    - "to_k"
+    - "to_q"
+    - "to_v"
+    - "to_out.0"
+    # Additional layers for finer control
+    - "add_k_proj"
+    - "add_v_proj"
+
+  # Module configuration
+  modules_to_save: []
+  init_lora_weights: true
+
+# IC-LoRA Conditioning Configuration
+conditioning:
+  mode: "reference_video"  # IC-LoRA mode
+
+  # Conditioning probability (probability of using trajectory conditioning)
+  conditioning_prob: 0.85  # 85% conditioned, 15% unconditional
+
+  # Reference video (trajectory) configuration
+  reference_video:
+    enabled: true
+    num_reference_frames: -1  # Use all frames
+    reference_conditioning_scale: 1.0
+
+  # First frame conditioning
+  first_frame_conditioning: true
+  first_frame_conditioning_prob: 0.9
+
+  # Conditioning augmentation
+  augmentation:
+    enabled: true
+    dropout_prob: 0.1  # Randomly drop trajectory info
+    noise_std: 0.05  # Add slight noise to trajectories
+    temporal_masking_prob: 0.05  # Randomly mask temporal segments
+
+# Dataset Configuration
+dataset:
+  # Data paths
+  data_root: "./dataset"
+  train_csv: "./dataset/train.csv"  # CSV with video,trajectory,caption paths
+
+  # Column names in CSV
+  video_column: "video_path"
+  reference_video_column: "trajectory_path"  # Trajectory visualizations
+  caption_column: "caption_path"
+
+  # Video parameters
+  num_frames: 121  # ~4 seconds at 30fps
+  frame_stride: 1
+  fps: 30
+
+  # Multi-resolution training (aspect ratio buckets)
+  enable_resolution_buckets: true
+  resolution_buckets:
+    - [512, 896]   # Vertical
+    - [704, 1216]  # Cinematic (16:9)
+    - [896, 512]   # Horizontal
+    - [768, 768]   # Square
+    - [640, 640]   # Square smaller
+
+  # Default resolution if bucketing disabled
+  resolution: [704, 1216]
+
+  # Data augmentation
+  augmentation:
+    enabled: true
+    horizontal_flip: 0.5
+    color_jitter:
+      enabled: true
+      brightness: 0.1
+      contrast: 0.1
+      saturation: 0.1
+      hue: 0.05
+    temporal_crop: true  # Random temporal windows
+    spatial_crop: true   # Random crops
+
+  # Dataloader
+  dataloader_num_workers: 8
+  pin_memory: true
+  prefetch_factor: 2
+
+# Optimization Configuration
+optimization:
+  # Learning rate
+  learning_rate: 8e-5  # Conservative for high-quality training
+  scale_lr: false
+
+  # Training steps
+  max_train_steps: 10000  # Longer training for complex patterns
+  gradient_accumulation_steps: 8  # Effective batch size = 8
+
+  # Batch size
+  train_batch_size: 1  # Per GPU
+
+  # Gradient clipping
+  max_grad_norm: 0.5  # Tight clipping for stability
+
+  # Optimizer
+  optimizer_type: "adamw"
+  adam_beta1: 0.9
+  adam_beta2: 0.999
+  adam_weight_decay: 0.01
+  adam_epsilon: 1e-8
+
+  # Use 8-bit optimizer for memory efficiency
+  use_8bit_adam: true
+
+  # Learning rate scheduler
+  lr_scheduler: "cosine_with_restarts"
+  lr_warmup_steps: 500
+  lr_num_cycles: 3  # Multiple cosine cycles
+
+  # Exponential Moving Average (EMA)
+  use_ema: true
+  ema_decay: 0.9999
+  ema_power: 0.75
+
+# Acceleration Configuration
+acceleration:
+  # Mixed precision
+  mixed_precision: "bf16"  # bfloat16 for stability
+
+  # PyTorch 2.0 compilation
+  enable_torch_compile: false  # Set true for PyTorch 2.0+
+  torch_compile_backend: "inductor"
+
+  # Gradient checkpointing
+  gradient_checkpointing: true
+
+  # Memory optimizations
+  enable_xformers_memory_efficient_attention: true
+  allow_tf32: true
+
+# Validation Configuration
+validation:
+  enabled: true
+  validation_steps: 500  # Validate every N steps
+  num_validation_videos: 4
+
+  # Validation prompts
+  validation_prompts:
+    - "A person walking towards the camera in a park"
+    - "Camera panning across a beautiful cityscape at sunset"
+    - "A car driving down a winding mountain road"
+    - "Autumn leaves falling and swirling in the wind"
+
+  # Validation reference videos (trajectory visualizations)
+  validation_reference_videos:
+    - "./validation_outputs/ref_walk.mp4"
+    - "./validation_outputs/ref_pan.mp4"
+    - "./validation_outputs/ref_drive.mp4"
+    - "./validation_outputs/ref_leaves.mp4"
+
+  # Save best model based on metric
+  save_best_model: true
+  metric: "lpips"  # Perceptual similarity
+
+  # Video generation settings
+  guidance_scale: 7.5
+  num_inference_steps: 50
+
+# Checkpointing Configuration
+checkpointing:
+  # Save frequency
+  checkpointing_steps: 500
+  save_steps: 500
+
+  # Keep last N checkpoints
+  keep_last_n_checkpoints: 5
+
+  # Save optimizer state
+  save_optimizer_state: true
+
+  # Resume from checkpoint
+  resume_from_checkpoint: null  # Path to checkpoint or "latest"
+
+  # Output directory
+  output_dir: "./output/trajectory_iclora"
+
+# Logging Configuration
+logging:
+  # Logging frequency
+  logging_steps: 10
+  report_to: "wandb"  # or "tensorboard", "all"
+
+  # Project name
+  project_name: "ltxv-trajectory-guided"
+  run_name: null  # Auto-generated if null
+
+  # Weights & Biases configuration
+  wandb:
+    entity: null  # Your W&B username
+    tags:
+      - "ltx-video"
+      - "iclora"
+      - "trajectory-guided"
+    notes: "High-quality trajectory-guided video generation with IC-LoRA"
+
+  # Log additional metrics
+  log_metrics:
+    - "trajectory_fidelity"
+    - "motion_smoothness"
+    - "temporal_consistency"
+
+  # Save samples
+  save_sample_images: true
+  sample_images_steps: 500
+
+# Experimental Features
+experimental:
+  # Trajectory quality metrics
+  compute_trajectory_metrics: true
+
+  # Multi-scale training
+  multi_scale_training: false
+
+  # Physics-based loss
+  use_physics_loss: false
+  physics_loss_weight: 0.1
+
+  # Temporal consistency loss
+  use_temporal_consistency_loss: true
+  temporal_consistency_loss_weight: 0.05
+
+# System Configuration
+system:
+  # Seed for reproducibility
+  seed: 42
+
+  # Number of GPUs (auto-detected)
+  num_processes: null
+
+  # Distributed training
+  distributed_training: true
+
+  # Enable TF32 for Ampere GPUs
+  allow_tf32: true
+
+  # CUDA configuration
+  cudnn_benchmark: true
+  cudnn_deterministic: false
+
+# Progressive Training Strategy (optional)
+progressive_training:
+  enabled: false
+  stages:
+    - name: "coarse_motion"
+      steps: 2000
+      resolution: [512, 512]
+      num_frames: 61
+      learning_rate: 1e-4
+
+    - name: "medium_fidelity"
+      steps: 3000
+      resolution: [704, 1216]
+      num_frames: 91
+      learning_rate: 5e-5
+
+    - name: "high_quality"
+      steps: 5000
+      resolution: [704, 1216]
+      num_frames: 121
+      learning_rate: 2e-5
