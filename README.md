@@ -15,6 +15,26 @@ The approach combines:
 - **IC-LoRA**: In-Context LoRA for trajectory conditioning
 - **Trajectory Fields**: Dense 3D motion representations (inspired by Trace Anything)
 
+## 💡 Single-Source Training Approach
+
+**KEY INSIGHT**: Use the **same high-quality videos** for both trajectory extraction AND training targets!
+
+```
+High-Quality Video → [Extract Trajectory] → Trajectory Visualization (conditioning)
+                  ↓
+                  → Original Video (training target)
+```
+
+**Benefits:**
+- ✅ **Perfect Alignment**: Trajectory and content perfectly synchronized
+- ✅ **Realistic Physics**: Model learns real-world motion → appearance mapping
+- ✅ **Simple & Efficient**: One dataset instead of two
+- ✅ **Scalable**: Just add more source videos
+
+The model learns: `(first_frame + trajectory_viz + caption) → realistic_video`
+
+**See [SINGLE_SOURCE_APPROACH.md](docs/SINGLE_SOURCE_APPROACH.md) for complete guide**
+
 ## 🚀 RunPod Deployment
 
 **NEW**: This system is fully optimized for RunPod!
@@ -104,15 +124,17 @@ pip install opencv-python-headless numpy scipy pandas tqdm
 pip install wandb tensorboard  # For logging
 ```
 
-### 2. Prepare Dataset
+### 2. Prepare Dataset (Single-Source Approach)
 
 Place your high-quality videos in a directory, then run:
 
 ```bash
-python scripts/prepare_dataset.py \
+# Enhanced single-source preparation (recommended)
+python scripts/prepare_dataset_single_source.py \
     --input_dir /path/to/raw/videos \
     --output_dir ./dataset \
     --visualization_type multi \
+    --overlay_first_frame \
     --min_frames 60 \
     --max_frames 121 \
     --target_fps 30 \
@@ -120,17 +142,22 @@ python scripts/prepare_dataset.py \
     --num_workers 4
 ```
 
-This will:
-- Extract clips from videos
-- Generate trajectory visualizations
-- Create captions
-- Save processed dataset
+**What This Does:**
 
-**Recommended Dataset:**
-- **Size**: 500-2,000 high-quality videos
-- **Quality**: 1080p or 4K source material
+From each high-quality video:
+1. ✅ Extracts trajectory field (optical flow or Trace Anything)
+2. ✅ Creates trajectory visualization (conditioning input)
+3. ✅ Saves **original video** as training target
+4. ✅ Generates motion-aware caption
+5. ✅ Creates perfect training pair: `(first_frame + trajectory) → video`
+
+**Recommended Source Videos:**
+- **Size**: 500-2,000 high-quality videos (ONE dataset for both trajectory & target)
+- **Quality**: 1080p or 4K source material, minimal compression
 - **Content**: Diverse motion types (camera motion, object motion, deformations)
 - **Duration**: 3-10 seconds per clip
+- **FPS**: 30+ for smooth motion
+- **Sources**: Pexels, Pixabay, or your own footage
 
 ### 3. Configure Training
 
