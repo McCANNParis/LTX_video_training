@@ -159,6 +159,30 @@ From each high-quality video:
 - **FPS**: 30+ for smooth motion
 - **Sources**: Pexels, Pixabay, or your own footage
 
+#### 2.1. Optional: Enhance Captions (Recommended)
+
+Auto-generated captions are functional but enhancing them improves training quality:
+
+```bash
+# Enhance captions to Tier 2 (template-based)
+python scripts/enhance_captions.py \
+    --dataset_dir ./dataset \
+    --target_tier 2
+
+# For production quality, use AI enhancement (Tier 3)
+python scripts/enhance_captions.py \
+    --dataset_dir ./dataset \
+    --target_tier 3 \
+    --use_blip2
+```
+
+**Caption Quality Tiers:**
+- **Tier 1** (Auto): `"Camera pan left, slow motion, realistic footage"`
+- **Tier 2** (Enhanced): `"Smooth camera pan left across mountain landscape, slow motion, natural lighting, cinematic composition"`
+- **Tier 3** (Professional): `"Cinematic slow pan left revealing layered mountain peaks emerging from morning mist, golden hour backlighting, smooth gimbal movement, atmospheric depth"`
+
+**Best Practice:** Aim for Tier 2 minimum. See [CAPTIONING_BEST_PRACTICES.md](docs/CAPTIONING_BEST_PRACTICES.md) for complete guide.
+
 ### 3. Configure Training
 
 Edit `configs/trajectory_iclora_high_quality.yaml` to set:
