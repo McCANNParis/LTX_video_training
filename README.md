@@ -2,6 +2,21 @@
 
 A complete system for training LTX Video 13B with LoRA on trajectory-guided motion control, enabling motion-guided img2video generation inspired by Trace Anything.
 
+## ⚠️ Important: Training Integration
+
+**For actual training, use the official LTX-Video trainer!**
+
+📖 **See [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** for complete instructions on:
+- Using official LTX-Video trainer with our trajectory preprocessing
+- Proper IC-LoRA configuration for trajectory control
+- Step-by-step integration workflow
+
+**This repo provides:**
+- ✅ Trajectory extraction and visualization (unique & valuable)
+- ✅ Single-source dataset preparation
+- ✅ H100-optimized preprocessing pipeline
+- ❌ Training script (use official trainer instead)
+
 ## Overview
 
 This system enables you to:
