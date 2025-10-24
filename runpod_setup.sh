@@ -131,7 +131,12 @@ EOF
 echo "Accelerate configured for $(nvidia-smi --list-gpus | wc -l) GPU(s)."
 
 echo -e "\n${GREEN}Step 7: Setting Up Git LFS (for large files)${NC}"
-git lfs install
+if command -v git-lfs &> /dev/null; then
+    git lfs install
+    echo "Git LFS installed successfully."
+else
+    echo -e "${YELLOW}Git LFS not found. Skipping (optional - install with: apt-get install git-lfs)${NC}"
+fi
 
 echo -e "\n${GREEN}Step 8: Creating RunPod Helper Scripts${NC}"
 
