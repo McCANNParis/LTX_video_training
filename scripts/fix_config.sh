@@ -51,7 +51,7 @@ acceleration:
   mixed_precision_mode: "bf16"
   quantization: null  # No quantization on H100
   load_text_encoder_in_8bit: false
-  compile_with_inductor: true
+  compile_with_inductor: false  # Disabled due to attention mask dtype incompatibility
   compilation_mode: "max-autotune"
 
 # Data configuration
