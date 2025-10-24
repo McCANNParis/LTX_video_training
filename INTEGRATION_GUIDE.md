@@ -177,7 +177,7 @@ cd /workspace/LTX-Video-Trainer
 accelerate launch \
     --mixed_precision=bf16 \
     --num_processes=1 \
-    src/training/train.py \
+    scripts/train.py \
     --config configs/trajectory_control_h100.yaml
 ```
 
@@ -212,7 +212,7 @@ ln -s /workspace/LTX_video_training/dataset/captions data/trajectory_control/cap
 accelerate launch \
     --mixed_precision=bf16 \
     --num_processes=1 \
-    src/training/train.py \
+    scripts/train.py \
     --config configs/trajectory_control_h100.yaml
 ```
 
