@@ -570,7 +570,7 @@ Before finalizing captions, verify:
 ```bash
 # Generate all captions automatically
 python scripts/prepare_dataset_single_source.py \
-    --input_dir /workspace/raw_videos \
+    --input_dir /workspace/LTX_video_training/raw_videos \
     --output_dir ./dataset \
     --enable_auto_captions \
     --caption_model blip2

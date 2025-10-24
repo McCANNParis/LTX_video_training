@@ -35,11 +35,11 @@ Wait for setup to complete (~2 minutes).
 
 **Option A: JupyterLab Upload** (for small datasets)
 - Click Upload button in JupyterLab
-- Upload to `/workspace/raw_videos/`
+- Upload to `/workspace/LTX_video_training/raw_videos/`
 
 **Option B: Command line** (for URLs)
 ```bash
-cd /workspace/raw_videos
+cd /workspace/LTX_video_training/raw_videos
 wget https://example.com/your-video.mp4
 ```
 
@@ -149,7 +149,7 @@ cd /workspace && ./runpod_setup.sh
 cd /workspace/LTX_video_training && ./scripts/runpod_launcher.sh
 
 # Prepare dataset
-python scripts/prepare_dataset.py --input_dir /workspace/raw_videos --output_dir ./dataset
+python scripts/prepare_dataset_single_source.py --input_dir /workspace/LTX_video_training/raw_videos --output_dir /workspace/LTX_video_training/dataset
 
 # Train (24GB GPU)
 ./scripts/train.sh configs/trajectory_iclora_runpod_24gb.yaml 1

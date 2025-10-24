@@ -82,6 +82,7 @@ jupyter nbextension enable --py widgetsnbextension --sys-prefix
 echo -e "\n${GREEN}Step 4: Creating Directory Structure${NC}"
 
 # Create necessary directories
+mkdir -p $WORKSPACE_DIR/raw_videos
 mkdir -p $WORKSPACE_DIR/dataset/{videos,trajectories,captions,metadata}
 mkdir -p $WORKSPACE_DIR/models
 mkdir -p $WORKSPACE_DIR/output
@@ -92,6 +93,7 @@ mkdir -p $WORKSPACE_DIR/notebooks
 mkdir -p $WORKSPACE_DIR/tmp
 
 echo "Directory structure created."
+echo "Upload your raw videos to: $WORKSPACE_DIR/raw_videos"
 
 echo -e "\n${GREEN}Step 5: Setting Up Environment Variables${NC}"
 

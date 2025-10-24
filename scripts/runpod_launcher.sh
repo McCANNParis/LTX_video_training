@@ -110,12 +110,12 @@ prepare_dataset() {
     echo ""
 
     # Check for videos
-    video_count=$(find /workspace/raw_videos -type f \( -name "*.mp4" -o -name "*.avi" -o -name "*.mov" \) 2>/dev/null | wc -l)
-    echo "Found $video_count videos in /workspace/raw_videos/"
+    video_count=$(find /workspace/LTX_video_training/raw_videos -type f \( -name "*.mp4" -o -name "*.avi" -o -name "*.mov" \) 2>/dev/null | wc -l)
+    echo "Found $video_count videos in /workspace/LTX_video_training/raw_videos/"
 
     if [ $video_count -eq 0 ]; then
         echo -e "${RED}No videos found!${NC}"
-        echo "Please upload videos to /workspace/raw_videos/ first."
+        echo "Please upload videos to /workspace/LTX_video_training/raw_videos/ first."
         read -p "Press Enter to continue..."
         return
     fi
@@ -126,9 +126,9 @@ prepare_dataset() {
     if [ "$confirm" = "y" ]; then
         echo ""
         echo "Starting dataset preparation..."
-        python scripts/prepare_dataset.py \
-            --input_dir /workspace/raw_videos \
-            --output_dir ./dataset \
+        python scripts/prepare_dataset_single_source.py \
+            --input_dir /workspace/LTX_video_training/raw_videos \
+            --output_dir /workspace/LTX_video_training/dataset \
             --num_workers 4 \
             --visualization_type multi
 

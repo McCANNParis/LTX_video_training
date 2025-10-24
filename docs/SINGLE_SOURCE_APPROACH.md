@@ -96,7 +96,7 @@ cd /workspace/LTX_video_training
 
 # Use the enhanced single-source script
 python scripts/prepare_dataset_single_source.py \
-    --input_dir /workspace/raw_videos \
+    --input_dir /workspace/LTX_video_training/raw_videos \
     --output_dir ./dataset \
     --visualization_type multi \
     --overlay_first_frame \
@@ -320,12 +320,12 @@ python scripts/train.sh configs/stage2_quality_refinement.yaml \
 
 ```bash
 # 1. Collect source videos
-mkdir -p /workspace/raw_videos
+mkdir -p /workspace/LTX_video_training/raw_videos
 # Upload your HD videos here
 
 # 2. Prepare dataset (single-source)
 python scripts/prepare_dataset_single_source.py \
-    --input_dir /workspace/raw_videos \
+    --input_dir /workspace/LTX_video_training/raw_videos \
     --output_dir ./dataset \
     --visualization_type multi \
     --overlay_first_frame \

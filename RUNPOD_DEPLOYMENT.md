@@ -93,7 +93,7 @@ Setup will take 5-10 minutes and will:
 **Option 1: JupyterLab Upload** (Small files)
 1. In JupyterLab, click Upload button
 2. Select video files
-3. Upload to `/workspace/raw_videos/`
+3. Upload to `/workspace/LTX_video_training/raw_videos/`
 
 **Option 2: RunPod CLI** (Large datasets)
 ```bash
@@ -101,12 +101,12 @@ Setup will take 5-10 minutes and will:
 pip install runpod
 
 # Upload files
-runpod send /local/path/to/videos pod-id:/workspace/raw_videos/
+runpod send /local/path/to/videos pod-id:/workspace/LTX_video_training/raw_videos/
 ```
 
 **Option 3: wget/curl** (From URLs)
 ```bash
-cd /workspace/raw_videos
+cd /workspace/LTX_video_training/raw_videos
 wget https://example.com/video.mp4
 ```
 
@@ -145,11 +145,11 @@ from google.cloud import storage  # Google Cloud Storage
 ```bash
 cd /workspace/LTX_video_training
 
-# Upload videos to /workspace/raw_videos/ first
+# Upload videos to /workspace/LTX_video_training/raw_videos/ first
 
 # Then run preparation
 python scripts/prepare_dataset.py \
-    --input_dir /workspace/raw_videos \
+    --input_dir /workspace/LTX_video_training/raw_videos \
     --output_dir ./dataset \
     --num_workers 4
 ```
@@ -494,7 +494,7 @@ gsutil -m rsync -r /workspace/LTX_video_training/output/ gs://your-bucket/ltxv-t
 ./runpod_setup.sh
 
 # Prepare dataset
-python scripts/prepare_dataset.py --input_dir /workspace/raw_videos --output_dir ./dataset
+python scripts/prepare_dataset.py --input_dir /workspace/LTX_video_training/raw_videos --output_dir ./dataset
 
 # Train
 ./scripts/train.sh configs/trajectory_iclora_high_quality.yaml 1
@@ -521,7 +521,7 @@ Before starting training:
 
 - [ ] Pod is running with sufficient GPU memory
 - [ ] Disk space > 200GB free
-- [ ] Videos uploaded to `/workspace/raw_videos/`
+- [ ] Videos uploaded to `/workspace/LTX_video_training/raw_videos/`
 - [ ] Setup script completed successfully
 - [ ] Dataset preparation finished
 - [ ] Training config reviewed and customized

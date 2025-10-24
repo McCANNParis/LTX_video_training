@@ -379,7 +379,7 @@ Your `prepare_dataset_single_source.py` already handles this!
 ```bash
 # Just run the script with your source videos
 python scripts/prepare_dataset_single_source.py \
-    --input_dir /workspace/raw_videos \  # Mix of resolutions OK!
+    --input_dir /workspace/LTX_video_training/raw_videos \  # Mix of resolutions OK!
     --output_dir ./dataset \
     --resolution 704x1216 \  # Default bucket (if bucketing disabled)
     --min_frames 60 \
