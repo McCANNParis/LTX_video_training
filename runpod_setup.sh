@@ -110,7 +110,7 @@ EOF
 
 # Source environment variables
 source $WORKSPACE_DIR/.env
-export $(cat $WORKSPACE_DIR/.env | xargs)
+export $(cat $WORKSPACE_DIR/.env | grep -v '^#' | grep -v '^$' | xargs)
 
 echo "Environment variables configured."
 
