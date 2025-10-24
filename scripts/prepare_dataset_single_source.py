@@ -13,12 +13,17 @@ Result: Training pairs where model learns (first_frame + trajectory) → realist
 """
 
 import sys
-sys.path.append('/home/user/LTX_video_training')
+import os
+from pathlib import Path
+
+# Add project root to path (works in any environment)
+script_dir = Path(__file__).parent.absolute()
+project_root = script_dir.parent
+sys.path.insert(0, str(project_root))
 
 import cv2
 import json
 import numpy as np
-from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 import argparse
 import logging
