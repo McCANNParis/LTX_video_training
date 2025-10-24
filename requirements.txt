@@ -9,6 +9,10 @@ transformers>=4.35.0
 accelerate>=0.25.0
 peft>=0.7.0
 
+# Tokenization (required for T5 tokenizer)
+sentencepiece>=0.2.0
+protobuf>=4.21.0
+
 # Computer vision
 opencv-python-headless>=4.8.0
 pillow>=10.0.0

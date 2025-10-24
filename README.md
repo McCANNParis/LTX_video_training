@@ -120,8 +120,12 @@ conda activate ltxv_trajectory
 # Install dependencies
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 pip install diffusers transformers accelerate peft
+pip install sentencepiece protobuf  # Required for T5 tokenizer
 pip install opencv-python-headless numpy scipy pandas tqdm
 pip install wandb tensorboard  # For logging
+
+# Or install all at once from requirements
+pip install -r requirements.txt
 ```
 
 ### 2. Prepare Dataset (Single-Source Approach)
