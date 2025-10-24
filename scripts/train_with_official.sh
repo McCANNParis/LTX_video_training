@@ -87,7 +87,7 @@ accelerate launch \
     --num_processes=1 \
     --num_machines=1 \
     --dynamo_backend=inductor \
-    src/training/train.py \
+    scripts/train.py \
     --config configs/trajectory_control_h100.yaml \
     2>&1 | tee "$LOG_FILE"
 
