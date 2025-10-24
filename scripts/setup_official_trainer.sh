@@ -39,7 +39,7 @@ fi
 # Install trainer dependencies
 cd LTX-Video-Trainer
 echo "Installing trainer dependencies..."
-uv pip install .
+uv pip install --system .
 cd ..
 
 echo ""
