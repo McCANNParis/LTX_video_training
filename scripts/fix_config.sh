@@ -42,9 +42,8 @@ optimization:
   gradient_accumulation_steps: 2
   max_grad_norm: 1.0
   optimizer_type: "adamw"
-  scheduler_type: "cosine_with_restarts"
-  scheduler_params:
-    num_cycles: 3
+  scheduler_type: "cosine"
+  scheduler_params: {}
   enable_gradient_checkpointing: true
 
 # Acceleration optimization
