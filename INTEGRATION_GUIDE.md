@@ -178,7 +178,7 @@ accelerate launch \
     --mixed_precision=bf16 \
     --num_processes=1 \
     scripts/train.py \
-    --config configs/trajectory_control_h100.yaml
+    configs/trajectory_control_h100.yaml
 ```
 
 ---
@@ -213,7 +213,7 @@ accelerate launch \
     --mixed_precision=bf16 \
     --num_processes=1 \
     scripts/train.py \
-    --config configs/trajectory_control_h100.yaml
+    configs/trajectory_control_h100.yaml
 ```
 
 ---
