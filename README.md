@@ -4,18 +4,28 @@ A complete system for training LTX Video 13B with LoRA on trajectory-guided moti
 
 ## ⚠️ Important: Training Integration
 
-**For actual training, use the official LTX-Video trainer!**
+**For actual training, use the official LTX-Video trainer (automated setup included)!**
 
-📖 **See [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** for complete instructions on:
-- Using official LTX-Video trainer with our trajectory preprocessing
-- Proper IC-LoRA configuration for trajectory control
-- Step-by-step integration workflow
+### 🚀 Quick Start (2 Commands):
+
+```bash
+# 1. Setup official trainer (one time)
+./scripts/setup_official_trainer.sh
+
+# 2. Train!
+./scripts/train_with_official.sh
+```
+
+Everything stays in `/workspace/LTX_video_training` - no external directories!
+
+📖 **See [QUICK_START_TRAINING.md](QUICK_START_TRAINING.md)** for complete guide.
 
 **This repo provides:**
 - ✅ Trajectory extraction and visualization (unique & valuable)
 - ✅ Single-source dataset preparation
 - ✅ H100-optimized preprocessing pipeline
-- ❌ Training script (use official trainer instead)
+- ✅ Automated official trainer setup (one command)
+- ✅ Pre-configured training scripts
 
 ## Overview
 
