@@ -152,12 +152,16 @@ From each high-quality video:
 5. ✅ Creates perfect training pair: `(first_frame + trajectory) → video`
 
 **Recommended Source Videos:**
-- **Size**: 500-2,000 high-quality videos (ONE dataset for both trajectory & target)
-- **Quality**: 1080p or 4K source material, minimal compression
+- **Quantity**: 500-2,000 high-quality videos (ONE dataset for both trajectory & target)
+- **Resolution**: 1080p or 4K (can be **mixed sizes** - see below)
+- **Aspect Ratios**: 16:9, 9:16, 1:1, 4:3 (all supported via bucketing)
+- **Duration**: 3-10 seconds per clip (mixed durations OK)
+- **Quality**: Minimal compression, good lighting
 - **Content**: Diverse motion types (camera motion, object motion, deformations)
-- **Duration**: 3-10 seconds per clip
-- **FPS**: 30+ for smooth motion
+- **FPS**: 24-60 (will be resampled to 30)
 - **Sources**: Pexels, Pixabay, or your own footage
+
+**🎯 Important**: Videos do **NOT** need to be the same size! The system uses **resolution bucketing** to handle different resolutions and aspect ratios automatically. See [RESOLUTION_REQUIREMENTS.md](docs/RESOLUTION_REQUIREMENTS.md) for details.
 
 #### 2.1. Optional: Enhance Captions (Recommended)
 
