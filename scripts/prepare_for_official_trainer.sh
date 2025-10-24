@@ -67,6 +67,9 @@ echo ""
 
 cd LTX-Video-Trainer
 
+# Set PYTHONPATH to include the scripts directory
+export PYTHONPATH=/workspace/LTX_video_training/LTX-Video-Trainer:$PYTHONPATH
+
 python scripts/preprocess_dataset.py \
     --dataset-json /workspace/LTX_video_training/dataset.json \
     --output-dir /workspace/LTX_video_training/preprocessed_official \
