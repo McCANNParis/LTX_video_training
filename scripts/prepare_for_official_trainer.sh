@@ -70,8 +70,9 @@ cd LTX-Video-Trainer
 # Set PYTHONPATH to include the scripts directory
 export PYTHONPATH=/workspace/LTX_video_training/LTX-Video-Trainer:$PYTHONPATH
 
+# Note: dataset path is a positional argument, not --dataset-json flag
 python scripts/preprocess_dataset.py \
-    --dataset-json /workspace/LTX_video_training/dataset.json \
+    /workspace/LTX_video_training/dataset.json \
     --output-dir /workspace/LTX_video_training/preprocessed_official \
     --buckets "704x1216" \
     --num-frames 121 \
