@@ -70,13 +70,18 @@ cd LTX-Video-Trainer
 # Set PYTHONPATH to include the scripts directory
 export PYTHONPATH=/workspace/LTX_video_training/LTX-Video-Trainer:$PYTHONPATH
 
-# Note: dataset path is a positional argument, not --dataset-json flag
+# Note: dataset path is a positional argument
+# Resolution format: "WxHxF" (width x height x frames)
+# We use 704x1216x121 for our trajectory videos
 python scripts/preprocess_dataset.py \
     /workspace/LTX_video_training/dataset.json \
+    --resolution-buckets "704x1216x121" \
+    --video-column "video" \
+    --caption-column "caption" \
+    --reference-column "reference_video" \
     --output-dir /workspace/LTX_video_training/preprocessed_official \
-    --resolution-buckets "704x1216" \
-    --num-frames 121 \
-    --frame-interval 1
+    --vae-tiling \
+    --batch-size 1
 
 echo ""
 echo "✓ Preprocessing complete!"
