@@ -78,7 +78,7 @@ validation:
   interval: 250
   videos_per_prompt: 1
   guidance_scale: 3.5
-  skip_initial_validation: false
+  skip_initial_validation: true
 
 # Checkpoint configuration
 checkpoints:
