@@ -213,7 +213,9 @@ class SingleSourceDatasetPreparator:
         max_frames: int = 121,
         target_fps: int = 30,
         target_resolution: tuple = (704, 1216),
-        num_workers: int = 4
+        num_workers: int = 4,
+        captions_dir: Optional[str] = None,
+        use_existing_captions: bool = False
     ):
         """
         Initialize single-source dataset preparator
@@ -229,6 +231,8 @@ class SingleSourceDatasetPreparator:
             target_fps: Target FPS
             target_resolution: Target resolution (H, W)
             num_workers: Parallel workers
+            captions_dir: Directory with existing caption files (optional)
+            use_existing_captions: Look for captions alongside videos
         """
         self.input_dir = Path(input_dir)
         self.output_dir = Path(output_dir)
@@ -240,6 +244,8 @@ class SingleSourceDatasetPreparator:
         self.target_fps = target_fps
         self.target_resolution = target_resolution
         self.num_workers = num_workers
+        self.external_captions_dir = Path(captions_dir) if captions_dir else None
+        self.use_existing_captions = use_existing_captions
 
         # Create output structure
         self.videos_dir = self.output_dir / "videos"  # Original videos (training targets)
@@ -267,6 +273,12 @@ class SingleSourceDatasetPreparator:
         logger.info(f"Output: {self.output_dir}")
         logger.info(f"Trajectory visualization: {visualization_type}")
         logger.info(f"Overlay first frame: {overlay_first_frame} (alpha={overlay_alpha})")
+        if self.external_captions_dir:
+            logger.info(f"Captions: Using existing from {self.external_captions_dir}")
+        elif self.use_existing_captions:
+            logger.info(f"Captions: Using existing (alongside videos)")
+        else:
+            logger.info(f"Captions: Auto-generating from motion analysis")
         logger.info("=" * 70)
 
     def prepare_dataset(self):
@@ -409,10 +421,20 @@ class SingleSourceDatasetPreparator:
                 str(video_output_path)
             )
 
-            # 3. Analyze motion for caption
-            motion_stats = self.motion_analyzer.analyze_motion(trajectory_data)
+            # 3. Check for existing caption first
+            existing_caption = self._find_existing_caption(video_path)
 
-            # 4. Create trajectory visualization (conditioning input)
+            # 4. Analyze motion for auto-caption (if needed)
+            if existing_caption:
+                caption = existing_caption
+                motion_stats = {}  # Skip motion analysis if using existing caption
+                logger.info(f"  Using existing caption")
+            else:
+                motion_stats = self.motion_analyzer.analyze_motion(trajectory_data)
+                caption = self.motion_analyzer.generate_caption(motion_stats, clip_name)
+                logger.info(f"  Generated caption from motion analysis")
+
+            # 5. Create trajectory visualization (conditioning input)
             logger.info(f"  Creating trajectory visualization...")
             trajectory_output_path = self.trajectories_dir / f"{clip_name}_traj.mp4"
 
@@ -427,10 +449,7 @@ class SingleSourceDatasetPreparator:
 
             logger.info(f"  Saved conditioning input: {trajectory_output_path.name}")
 
-            # 5. Generate caption
-            caption = self.motion_analyzer.generate_caption(motion_stats, clip_name)
-
-            # Save caption
+            # 6. Save caption to output directory
             caption_path = self.captions_dir / f"{clip_name}.txt"
             with open(caption_path, 'w') as f:
                 f.write(caption)
@@ -459,6 +478,39 @@ class SingleSourceDatasetPreparator:
             import traceback
             traceback.print_exc()
             return None
+
+    def _find_existing_caption(self, video_path: Path) -> Optional[str]:
+        """
+        Find existing caption file for a video
+
+        Looks in two places:
+        1. Alongside the video (same name, .txt extension)
+        2. In external captions directory
+
+        Returns caption text or None if not found
+        """
+        caption_text = None
+
+        # Option 1: Check alongside video
+        if self.use_existing_captions:
+            caption_file = video_path.with_suffix('.txt')
+            if caption_file.exists():
+                with open(caption_file, 'r', encoding='utf-8') as f:
+                    caption_text = f.read().strip()
+                logger.info(f"  Found caption alongside video: {caption_file.name}")
+                return caption_text
+
+        # Option 2: Check in external captions directory
+        if self.external_captions_dir:
+            # Try same name as video
+            caption_file = self.external_captions_dir / f"{video_path.stem}.txt"
+            if caption_file.exists():
+                with open(caption_file, 'r', encoding='utf-8') as f:
+                    caption_text = f.read().strip()
+                logger.info(f"  Found caption in external dir: {caption_file.name}")
+                return caption_text
+
+        return None
 
     def _find_video_files(self) -> List[Path]:
         """Find all video files in input directory"""
@@ -673,6 +725,17 @@ def main():
         default=4,
         help="Number of parallel workers"
     )
+    parser.add_argument(
+        "--captions_dir",
+        type=str,
+        default=None,
+        help="Directory with existing caption files (.txt). If provided, will use these instead of auto-generating."
+    )
+    parser.add_argument(
+        "--use_existing_captions",
+        action="store_true",
+        help="Look for caption files alongside videos (same name, .txt extension)"
+    )
 
     args = parser.parse_args()
 
@@ -691,7 +754,9 @@ def main():
         max_frames=args.max_frames,
         target_fps=args.target_fps,
         target_resolution=target_resolution,
-        num_workers=args.num_workers
+        num_workers=args.num_workers,
+        captions_dir=args.captions_dir,
+        use_existing_captions=args.use_existing_captions
     )
 
     # Prepare dataset
