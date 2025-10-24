@@ -58,6 +58,8 @@ pip install --no-cache-dir \
     accelerate>=0.25.0 \
     peft>=0.7.0 \
     bitsandbytes>=0.41.0 \
+    sentencepiece>=0.2.0 \
+    protobuf>=4.21.0 \
     opencv-python-headless>=4.8.0 \
     pillow>=10.0.0 \
     numpy>=1.24.0 \
