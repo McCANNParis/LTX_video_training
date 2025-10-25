@@ -78,11 +78,11 @@ for entry in tqdm(dataset, desc="Generating embeddings"):
             attention_mask=text_inputs.attention_mask,
         )[0]
 
-    # Save embeddings with correct key names expected by trainer
+    # Save embeddings with correct key names and dtypes expected by trainer
     torch.save(
         {
             'prompt_embeds': text_embeddings.cpu(),
-            'prompt_attention_mask': text_inputs.attention_mask.cpu(),
+            'prompt_attention_mask': text_inputs.attention_mask.bool().cpu(),  # Convert to bool
         },
         output_path
     )
