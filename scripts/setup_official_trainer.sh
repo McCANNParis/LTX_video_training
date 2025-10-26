@@ -64,108 +64,108 @@ echo "  - captions -> dataset/captions"
 echo ""
 echo -e "${GREEN}Step 4: Creating Training Configuration${NC}"
 
-# Create config file
+# Create config file with all required fields
 cat > LTX-Video-Trainer/configs/trajectory_control_h100.yaml << 'EOF'
-# Trajectory Control IC-LoRA Configuration for H100
-# Custom trajectory-guided video generation using our preprocessed data
+# Trajectory Control IC-LoRA Training Configuration
+# Optimized for H100 80GB
 
-# Basic settings
-output_dir: /workspace/LTX_video_training/output/trajectory_control_official
-seed: 42
+# Model configuration
+model:
+  model_source: "LTXV_13B_097_DEV"
+  training_mode: "lora"
+  load_checkpoint: null
 
-# Model settings
-model_id: "Lightricks/LTX-Video"
-model_variant: "13B-0.9.7"
-
-# Training mode: IC-LoRA for control
-training_mode: "ic_lora"
-
-# Dataset settings
-dataset:
-  type: "video_folder"
-  video_dir: "data/trajectory_control/videos"
-  conditioning_dir: "data/trajectory_control/conditioning"
-  caption_dir: "data/trajectory_control/captions"
-
-  # Video parameters
-  resolution: 704
-  num_frames: 121
-  fps: 30
-
-  # Preprocessing
-  center_crop: false
-  random_flip: 0.5
-
-# IC-LoRA settings
-ic_lora:
-  rank: 512  # High rank for H100
-  alpha: 512
+# LoRA configuration - Memory optimized
+lora:
+  rank: 128  # Balanced for H100 memory and quality (654M params)
+  alpha: 128
   dropout: 0.05
   target_modules:
     - "to_k"
     - "to_q"
     - "to_v"
     - "to_out.0"
+    - "ff.net.0.proj"
+    - "ff.net.2"
 
-  # Conditioning
-  conditioning_type: "concat"
-  conditioning_channels: 3  # RGB trajectory visualization
-  conditioning_scale: 1.0
+# Conditioning configuration
+conditioning:
+  mode: "reference_video"  # Use trajectory visualizations as reference
+  first_frame_conditioning_p: 0.9
+  reference_latents_dir: "reference_latents"
 
-# Training settings
-training:
-  num_train_epochs: 100
-  train_batch_size: 4  # H100 optimized
-  gradient_accumulation_steps: 2
-
+# Optimization configuration
+optimization:
   learning_rate: 1.0e-4
-  lr_scheduler: "cosine_with_restarts"
-  lr_warmup_steps: 500
-  lr_num_cycles: 3
-
+  steps: 5000
+  batch_size: 1  # Reduced for memory efficiency
+  gradient_accumulation_steps: 8  # Maintain effective batch size of 8
   max_grad_norm: 1.0
+  optimizer_type: "adamw"
+  scheduler_type: "cosine"
+  scheduler_params: {}
+  enable_gradient_checkpointing: true
 
-  # Optimizer
-  optimizer: "adamw"
-  adam_beta1: 0.9
-  adam_beta2: 0.999
-  adam_weight_decay: 0.01
+# Acceleration optimization
+acceleration:
+  mixed_precision_mode: "bf16"
+  quantization: null
+  load_text_encoder_in_8bit: false
+  compile_with_inductor: false  # Disabled for stability
+  compilation_mode: "max-autotune"
 
-  # Memory optimizations
-  mixed_precision: "bf16"
-  gradient_checkpointing: true
-  enable_xformers: true
+# Data configuration - REQUIRED FIELD
+data:
+  preprocessed_data_root: "/workspace/LTX_video_training/preprocessed_official"
+  num_dataloader_workers: 16
 
-# Checkpointing
-checkpointing:
-  save_steps: 250
-  checkpointing_steps: 250
-  keep_last_n_checkpoints: 10
-  save_on_epoch_end: true
-
-# Validation
+# Validation configuration
 validation:
-  enabled: true
-  validation_steps: 250
-  num_validation_samples: 4
-
-  validation_prompts:
+  prompts:
     - "A person walking towards camera in a park"
     - "Camera panning across a beautiful landscape"
     - "A car driving down a winding road"
     - "Autumn leaves falling and swirling"
+  reference_videos:
+    - "/workspace/LTX_video_training/dataset/trajectories/video_000000_clip_000_traj.mp4"
+    - "/workspace/LTX_video_training/dataset/trajectories/video_000001_clip_000_traj.mp4"
+    - "/workspace/LTX_video_training/dataset/trajectories/video_000002_clip_000_traj.mp4"
+    - "/workspace/LTX_video_training/dataset/trajectories/video_000003_clip_000_traj.mp4"
+  negative_prompt: "worst quality, inconsistent motion, blurry, jittery, distorted"
+  video_dims: [704, 1216, 121]  # [width, height, frames]
+  seed: 42
+  inference_steps: 50
+  interval: 5000  # Only validate at end to avoid OOM
+  videos_per_prompt: 1
+  guidance_scale: 3.5
+  skip_initial_validation: true
 
-# Logging
-logging:
-  report_to: "tensorboard"
-  logging_steps: 10
-  tensorboard_dir: "/workspace/LTX_video_training/output/trajectory_control_official/tensorboard"
+# Checkpoint configuration
+checkpoints:
+  interval: 250  # Save every 250 steps
+  keep_last_n: 10
 
-# Acceleration (H100 specific)
-acceleration:
-  use_torch_compile: true
-  torch_compile_mode: "max-autotune"
-  use_flash_attention_2: true
+# Flow matching configuration
+flow_matching:
+  timestep_sampling_mode: "shifted_logit_normal"
+  timestep_sampling_params: {}
+
+# HuggingFace Hub configuration
+hub:
+  push_to_hub: false
+  hub_model_id: null
+
+# W&B configuration
+wandb:
+  enabled: false
+  project: "ltxv-trajectory-control"
+  entity: null
+  tags: ["trajectory", "ic-lora", "h100"]
+  log_validation_videos: true
+
+# General configuration
+seed: 42
+output_dir: "/workspace/LTX_video_training/output/trajectory_control_official"
 EOF
 
 echo "Created config: LTX-Video-Trainer/configs/trajectory_control_h100.yaml"

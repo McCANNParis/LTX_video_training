@@ -99,7 +99,6 @@ validation:
 ### Setup & Preparation
 - `setup_official_trainer.sh` - Clone and install official LTX-Video trainer
 - `prepare_for_official_trainer.sh` - Preprocess dataset for training
-- `fix_config.sh` - Regenerate config with latest optimizations
 - `regenerate_captions.sh` - Generate caption embeddings with correct dtype
 
 ### Training
@@ -142,8 +141,12 @@ tensorboard --logdir /workspace/LTX_video_training/output/trajectory_control_off
 
 If you hit OOM during training:
 
-1. **Reduce LoRA rank** (in `fix_config.sh` and config file):
-```yaml
+1. **Reduce LoRA rank** (edit the config file directly):
+```bash
+# Edit config
+vim LTX-Video-Trainer/configs/trajectory_control_h100.yaml
+
+# Change lora.rank from 128 to 64
 lora:
   rank: 64   # Lower from 128
   alpha: 64
@@ -207,7 +210,6 @@ LTX_video_training/
 │   ├── train_with_official.sh
 │   ├── prepare_for_official_trainer.sh
 │   ├── regenerate_captions.sh
-│   ├── fix_config.sh
 │   └── fix_preprocessing_structure.sh
 ├── dataset/                    # Your training data
 │   ├── videos/
@@ -244,8 +246,8 @@ LTX_video_training/
 - Directory structure: Run `fix_preprocessing_structure.sh`
 
 **Configuration Issues:**
-- Config validation errors: Run `fix_config.sh`
-- Missing fields: Check `fix_config.sh` for required fields
+- Config validation errors: Re-run `./scripts/setup_official_trainer.sh` to regenerate config
+- The setup script creates a complete config with all required fields
 
 ## Version Info
 
