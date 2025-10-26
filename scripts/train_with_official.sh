@@ -50,9 +50,26 @@ fi
 echo "Dataset: $VIDEO_COUNT videos"
 echo ""
 
-# Show GPU info
+# Detect number of GPUs
+NUM_GPUS=$(nvidia-smi --query-gpu=count --format=csv,noheader | head -1)
+if [ -z "$NUM_GPUS" ] || [ "$NUM_GPUS" -eq 0 ]; then
+    echo -e "${RED}Error: No GPUs detected!${NC}"
+    exit 1
+fi
+
 echo "GPU Information:"
 nvidia-smi --query-gpu=name,memory.total,memory.free --format=csv,noheader
+echo ""
+echo "Detected GPUs: $NUM_GPUS"
+
+# Set effective batch size based on number of GPUs
+if [ "$NUM_GPUS" -gt 1 ]; then
+    echo "Multi-GPU training enabled: Using $NUM_GPUS GPUs"
+    echo "Note: Effective batch size will be: batch_size × gradient_accumulation × num_gpus"
+    echo "      Current config: 1 × 8 × $NUM_GPUS = $((8 * NUM_GPUS))"
+else
+    echo "Single GPU training"
+fi
 echo ""
 
 # Create output directory
@@ -80,16 +97,29 @@ export TOKENIZERS_PARALLELISM=false
 # Change to trainer directory
 cd LTX-Video-Trainer
 
-# Launch training
-echo "Launching accelerate..."
-accelerate launch \
-    --mixed_precision=bf16 \
-    --num_processes=1 \
-    --num_machines=1 \
-    --dynamo_backend=inductor \
-    scripts/train.py \
-    configs/trajectory_control_h100.yaml \
-    2>&1 | tee "$LOG_FILE"
+# Launch training with detected GPUs
+echo "Launching accelerate with $NUM_GPUS GPU(s)..."
+if [ "$NUM_GPUS" -eq 1 ]; then
+    # Single GPU training
+    accelerate launch \
+        --mixed_precision=bf16 \
+        --num_processes=1 \
+        --num_machines=1 \
+        --dynamo_backend=inductor \
+        scripts/train.py \
+        configs/trajectory_control_h100.yaml \
+        2>&1 | tee "$LOG_FILE"
+else
+    # Multi-GPU training
+    accelerate launch \
+        --mixed_precision=bf16 \
+        --multi_gpu \
+        --num_processes=$NUM_GPUS \
+        --num_machines=1 \
+        scripts/train.py \
+        configs/trajectory_control_h100.yaml \
+        2>&1 | tee "$LOG_FILE"
+fi
 
 # Return to main directory
 cd ..

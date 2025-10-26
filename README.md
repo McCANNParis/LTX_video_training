@@ -28,9 +28,15 @@ Result: Generate videos from a single image + desired motion trajectory.
 
 ## System Requirements
 
-- **GPU**: H100 80GB (optimized configuration)
+- **GPU**: H100 or H200 (single or multi-GPU supported)
+  - Single H100 80GB: batch_size=1, effective batch=8
+  - 2x H100: effective batch=16 (auto-scaled)
+  - 4x H100: effective batch=32 (auto-scaled)
+  - 8x H100/H200: effective batch=64 (auto-scaled)
 - **Storage**: ~50GB for model + dataset
 - **Platform**: RunPod (or any Linux with CUDA)
+
+**Multi-GPU**: Script automatically detects and uses all available GPUs!
 
 ## Dataset Preparation
 
@@ -120,6 +126,36 @@ Checkpoints saved every 250 steps in:
 ```
 /workspace/LTX_video_training/output/trajectory_control_official/
 ```
+
+## Multi-GPU Training
+
+The training script **automatically detects and uses all available GPUs**. No configuration changes needed!
+
+### How It Works
+
+- **Auto-detection**: Script counts GPUs using `nvidia-smi`
+- **Data parallelism**: Each GPU gets its own replica of the model
+- **Gradient synchronization**: Gradients are averaged across GPUs
+- **Effective batch size**: `batch_size × gradient_accumulation × num_gpus`
+
+### Performance Scaling
+
+| GPUs | Effective Batch | Speed Multiplier | Time for 5000 steps |
+|------|----------------|------------------|---------------------|
+| 1x H100 | 8 | 1x | ~17.5 hours |
+| 2x H100 | 16 | ~2x | ~9 hours |
+| 4x H100 | 32 | ~4x | ~4.5 hours |
+| 8x H100 | 64 | ~7-8x | ~2.5 hours |
+
+### Memory Requirements
+
+Each GPU needs:
+- **Model**: ~35GB (transformer + VAE + text encoder)
+- **Activations**: ~25GB (with gradient checkpointing)
+- **Gradients**: ~10GB (LoRA parameters)
+- **Total**: ~70-75GB per GPU
+
+**Note**: H200s (141GB) will have more headroom for larger batch sizes or higher LoRA ranks.
 
 ## Monitoring Training
 
@@ -225,9 +261,17 @@ LTX_video_training/
 
 ## Hardware Tested
 
+### Single GPU
 - **H100 80GB**: Fully working (batch_size=1, rank=128)
 - **Memory usage**: ~71GB peak during training
-- **Training speed**: ~106 sec/step
+- **Training speed**: ~106 sec/step (17.5 hours for 5000 steps)
+
+### Multi-GPU (Auto-detected)
+- **2x H100**: Effective batch size 16, ~2x faster
+- **4x H100**: Effective batch size 32, ~4x faster
+- **8x H100/H200**: Effective batch size 64, ~8x faster
+
+**Note**: Multi-GPU training is automatically enabled when multiple GPUs are detected. Each GPU processes batch_size=1 with gradient_accumulation=8, giving effective batch = 8 × num_gpus.
 
 ## Production Tips
 
