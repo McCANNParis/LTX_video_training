@@ -93,7 +93,6 @@ def test_proper_inference(args):
             generator=generator,
             decode_timestep=0.05,  # NEW: for VAE 0.9+
             image_cond_noise_scale=0.025,  # NEW: for VAE 0.9+
-            mu=0.3,  # NEW: Required for dynamic shifting - passed to scheduler
         )
 
     # Extract frames
