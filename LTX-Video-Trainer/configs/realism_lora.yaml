@@ -1,0 +1,95 @@
+# Simple Realism LoRA Training Configuration
+# Text-to-video LoRA training without trajectory conditioning
+# Optimized for improving realism on video generation
+
+# Model configuration
+model:
+  model_source: "LTXV_13B_097_DEV"
+  training_mode: "lora"
+  load_checkpoint: null
+
+# LoRA configuration
+lora:
+  rank: 128  # Balanced for H100 memory and quality
+  alpha: 128
+  dropout: 0.05
+  target_modules:
+    - "to_k"
+    - "to_q"
+    - "to_v"
+    - "to_out.0"
+    - "ff.net.0.proj"
+    - "ff.net.2"
+
+# Conditioning configuration - TEXT ONLY (no trajectory)
+conditioning:
+  mode: "text_only"  # No reference video conditioning
+  first_frame_conditioning_p: 0.0  # Disabled for text-only training
+
+# Optimization configuration
+optimization:
+  learning_rate: 1.0e-4
+  steps: 5000  # Good for dataset size
+  batch_size: 4  # H100 optimized
+  gradient_accumulation_steps: 2
+  max_grad_norm: 1.0
+  optimizer_type: "adamw"
+  scheduler_type: "cosine"
+  scheduler_params: {}
+  enable_gradient_checkpointing: true
+
+# Acceleration optimization
+acceleration:
+  mixed_precision_mode: "bf16"
+  quantization: null  # No quantization on H100
+  load_text_encoder_in_8bit: false
+  compile_with_inductor: false  # Disabled for stability
+  compilation_mode: "max-autotune"
+
+# Data configuration
+data:
+  preprocessed_data_root: "/workspace/LTX_video_training/preprocessed_realism"
+  num_dataloader_workers: 16
+
+# Validation configuration
+validation:
+  prompts:
+    - "A person walking in a park, photorealistic, high detail"
+    - "Camera panning across a beautiful landscape, natural lighting"
+    - "A car driving down a road, realistic motion"
+    - "Close-up of a person's face, detailed features, natural expression"
+  negative_prompt: "worst quality, low quality, blurry, distorted, unrealistic, cartoon, animated, artificial"
+  video_dims: [704, 1216, 121]  # [width, height, frames]
+  seed: 42
+  inference_steps: 50
+  interval: 10000  # Only validate at end to save memory
+  videos_per_prompt: 1
+  guidance_scale: 3.5
+  skip_initial_validation: true
+
+# Checkpoint configuration
+checkpoints:
+  interval: 250  # Save every 250 steps
+  keep_last_n: 10  # Keep last 10 checkpoints
+
+# Flow matching configuration
+flow_matching:
+  timestep_sampling_mode: "shifted_logit_normal"
+  timestep_sampling_params: {}
+
+# HuggingFace Hub configuration
+hub:
+  push_to_hub: false
+  hub_model_id: null
+
+# W&B configuration
+wandb:
+  enabled: false
+  project: "ltxv-realism-lora"
+  entity: null
+  tags: ["realism", "text-to-video", "lora", "h100"]
+  log_validation_videos: true
+
+# General configuration
+seed: 42
+output_dir: "/workspace/LTX_video_training/output/realism_lora"
