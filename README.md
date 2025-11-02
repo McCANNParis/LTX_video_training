@@ -281,6 +281,37 @@ LTX_video_training/
 4. **Resume friendly**: Training auto-resumes from latest checkpoint
 5. **Validate at end**: Skip validation during training to save memory
 
+## Using Your Trained LoRA
+
+### Option 1: ComfyUI (Recommended for UI)
+
+Your LoRA needs format conversion for ComfyUI compatibility:
+
+```bash
+# Convert LoRA (creates 4 format variants)
+python scripts/convert_lora_for_comfyui.py \
+    output/trajectory_control_official/checkpoints/lora_weights_step_04750.safetensors \
+    --type all
+
+# Copy to ComfyUI
+cp output/trajectory_control_official/checkpoints/converted/*.safetensors \
+   /path/to/ComfyUI/models/loras/
+```
+
+**See [COMFYUI_USAGE.md](COMFYUI_USAGE.md) for detailed instructions.**
+
+### Option 2: Official Trainer Inference (Most Compatible)
+
+```bash
+cd /workspace/LTX_video_training/LTX-Video-Trainer
+
+python scripts/infer.py \
+    --model_path Lightricks/LTX-Video \
+    --lora_path ../output/trajectory_control_official/checkpoints/lora_weights_step_04750.safetensors \
+    --prompt "Your prompt here" \
+    --output_path output.mp4
+```
+
 ## Getting Help
 
 **Common Issues:**
@@ -288,6 +319,7 @@ LTX_video_training/
 - Slow training: Reduce resolution or LoRA rank
 - Caption errors: Run `regenerate_captions.sh`
 - Directory structure: Run `fix_preprocessing_structure.sh`
+- ComfyUI compatibility: See COMFYUI_USAGE.md
 
 **Configuration Issues:**
 - Config validation errors: Re-run `./scripts/setup_official_trainer.sh` to regenerate config
