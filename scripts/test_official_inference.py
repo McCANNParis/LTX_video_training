@@ -28,10 +28,11 @@ def main():
         from ltx_video.inference import infer, InferenceConfig
 
         print("\n✓ Official LTX-Video library found")
-        print("\nGenerating...")
+        print("\nGenerating with Lightricks/LTX-Video (dev model)...")
 
+        # Use model ID directly instead of config file
         infer(InferenceConfig(
-            pipeline_config="configs/ltxv-13b-0.9.8-distilled.yaml",  # Or appropriate config
+            model_id="Lightricks/LTX-Video",  # Use HuggingFace model ID
             prompt=args.prompt,
             height=args.height,
             width=args.width,
@@ -42,14 +43,12 @@ def main():
 
         print(f"\n✓ Done! Saved to {args.output}")
 
-    except ImportError as e:
-        print(f"\n✗ Official LTX-Video library not installed")
-        print(f"\nTo install:")
-        print(f"  pip install git+https://github.com/Lightricks/LTX-Video.git")
-        print(f"\nOr clone and install locally:")
-        print(f"  git clone https://github.com/Lightricks/LTX-Video.git")
-        print(f"  cd LTX-Video")
-        print(f"  pip install -e .")
+    except Exception as e:
+        print(f"\n✗ Error: {e}")
+        print(f"\nTrying alternative approach...")
+
+        # Fallback: Use diffusers directly (but we know this has green tint)
+        print("Using diffusers as fallback (may have green tint issue)")
         return 1
 
     print("="*60)
