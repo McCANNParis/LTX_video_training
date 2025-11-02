@@ -17,6 +17,20 @@ import imageio
 import numpy as np
 
 
+def calculate_shift(
+    image_seq_len,
+    base_seq_len: int = 256,
+    max_seq_len: int = 4096,
+    base_shift: float = 0.5,
+    max_shift: float = 1.15,
+):
+    """Calculate mu for dynamic timestep shifting."""
+    m = (max_shift - base_shift) / (max_seq_len - base_seq_len)
+    b = base_shift - m * base_seq_len
+    mu = image_seq_len * m + b
+    return mu
+
+
 def test_proper_inference(args):
     """Test with proper pipeline and settings."""
 
@@ -29,6 +43,7 @@ def test_proper_inference(args):
     print("  - decode_timestep=0.05")
     print("  - image_cond_noise_scale=0.025")
     print("  - VAE tiling enabled")
+    print("  - Dynamic mu calculation")
     print("="*60)
 
     # Load pipeline properly
@@ -38,6 +53,20 @@ def test_proper_inference(args):
         torch_dtype=torch.bfloat16
     )
     pipe.to("cuda")
+
+    # Calculate mu based on sequence length
+    # For video: seq_len = num_frames * (height // patch_size) * (width // patch_size)
+    # LTX-Video uses patch_size of 8 for spatial, 1 for temporal
+    latent_height = args.height // 8
+    latent_width = args.width // 8
+    image_seq_len = args.num_frames * latent_height * latent_width
+    mu = calculate_shift(image_seq_len)
+    print(f"\nCalculated mu: {mu:.4f} (for seq_len={image_seq_len})")
+
+    # Disable dynamic shifting in scheduler and set mu manually
+    if hasattr(pipe.scheduler.config, 'use_dynamic_shifting'):
+        pipe.scheduler.config.use_dynamic_shifting = False
+        print("Disabled dynamic shifting in scheduler (using pre-calculated mu)")
 
     # Enable VAE tiling (from docs)
     print("Enabling VAE tiling...")
@@ -64,7 +93,7 @@ def test_proper_inference(args):
             generator=generator,
             decode_timestep=0.05,  # NEW: for VAE 0.9+
             image_cond_noise_scale=0.025,  # NEW: for VAE 0.9+
-            mu=0.3,  # NEW: Required for dynamic shifting in scheduler
+            mu=0.3,  # NEW: Required for dynamic shifting - passed to scheduler
         )
 
     # Extract frames
