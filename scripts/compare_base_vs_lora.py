@@ -9,8 +9,6 @@ import os
 import argparse
 import torch
 
-sys.path.insert(0, '/workspace/LTX_video_training/LTX-Video-Trainer')
-
 from transformers import T5EncoderModel, T5Tokenizer
 from diffusers import AutoencoderKLLTXVideo, LTXVideoTransformer3DModel
 from diffusers.schedulers import FlowMatchEulerDiscreteScheduler
@@ -42,14 +40,15 @@ def load_pipeline(lora_path=None):
     vae = vae.to("cuda")
     transformer = transformer.to("cuda")
 
-    from ltxv_trainer.ltxv_pipeline import LTXVPipeline
-    return LTXVPipeline(
+    pipeline = LTXPipeline(
         transformer=transformer,
         scheduler=scheduler,
         vae=vae,
         text_encoder=text_encoder,
         tokenizer=tokenizer,
     )
+
+    return pipeline
 
 
 def generate_video(pipeline, prompt, negative_prompt, height, width, num_frames, steps, guidance, seed):

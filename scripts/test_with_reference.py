@@ -14,8 +14,6 @@ import imageio
 import numpy as np
 from pathlib import Path
 
-sys.path.insert(0, '/workspace/LTX_video_training/LTX-Video-Trainer')
-
 from transformers import T5EncoderModel, T5Tokenizer
 from diffusers import AutoencoderKLLTXVideo, LTXVideoTransformer3DModel
 from diffusers.schedulers import FlowMatchEulerDiscreteScheduler
@@ -80,25 +78,14 @@ def load_pipeline_with_lora(lora_path):
     transformer = transformer.to("cuda")
 
     # Create pipeline
-    try:
-        from ltxv_trainer.ltxv_pipeline import LTXVPipeline
-        pipeline = LTXVPipeline(
-            transformer=transformer,
-            scheduler=scheduler,
-            vae=vae,
-            text_encoder=text_encoder,
-            tokenizer=tokenizer,
-        )
-    except ImportError:
-        print("Warning: Could not import trainer pipeline, using diffusers...")
-        from diffusers import LTXPipeline
-        pipeline = LTXPipeline(
-            transformer=transformer,
-            scheduler=scheduler,
-            vae=vae,
-            text_encoder=text_encoder,
-            tokenizer=tokenizer,
-        )
+    from diffusers import LTXPipeline
+    pipeline = LTXPipeline(
+        transformer=transformer,
+        scheduler=scheduler,
+        vae=vae,
+        text_encoder=text_encoder,
+        tokenizer=tokenizer,
+    )
 
     return pipeline, vae
 
