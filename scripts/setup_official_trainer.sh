@@ -135,7 +135,7 @@ validation:
   video_dims: [704, 1216, 121]  # [width, height, frames]
   seed: 42
   inference_steps: 50
-  interval: 5000  # Only validate at end to avoid OOM
+  interval: 10000  # Disabled (higher than total steps) to avoid OOM
   videos_per_prompt: 1
   guidance_scale: 3.5
   skip_initial_validation: true
