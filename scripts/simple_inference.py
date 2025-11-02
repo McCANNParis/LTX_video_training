@@ -155,15 +155,28 @@ def main():
             generator=generator,
         )
 
-    # Extract frames
-    video = output.frames[0] if hasattr(output, 'frames') else output.videos[0]
+    # Extract frames - handle different output formats
+    if hasattr(output, 'frames'):
+        video = output.frames[0]
+    elif hasattr(output, 'videos'):
+        video = output.videos[0]
+    else:
+        video = output[0]
 
-    # Convert to numpy if needed
+    # Handle list of frames
+    if isinstance(video, list):
+        import numpy as np
+        video = np.array(video)
+
+    # Convert tensor to numpy if needed
     if isinstance(video, torch.Tensor):
         video = video.cpu().numpy()
 
-    # Ensure uint8
+    # Ensure correct shape and dtype
     if video.dtype != 'uint8':
+        # Normalize to 0-1 if needed
+        if video.max() > 1.0:
+            video = video / 255.0
         video = (video.clip(0, 1) * 255).astype('uint8')
 
     # Save
