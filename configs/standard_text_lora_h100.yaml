@@ -1,0 +1,97 @@
+# Standard Text-to-Video LoRA Training Configuration
+# For improving realism - NO trajectory conditioning
+# Optimized for H100
+
+# Model configuration
+model:
+  model_source: "LTXV_13B_097_DEV"
+  training_mode: "lora"
+  load_checkpoint: null
+
+# LoRA configuration
+lora:
+  rank: 128  # Balanced for H100 memory and quality
+  alpha: 128
+  dropout: 0.05
+  target_modules:
+    - "to_k"
+    - "to_q"
+    - "to_v"
+    - "to_out.0"
+    - "ff.net.0.proj"
+    - "ff.net.2"
+
+# Conditioning configuration - REMOVED trajectory conditioning
+conditioning:
+  mode: "text"  # Standard text-to-video (no reference videos)
+  first_frame_conditioning_p: 0.0  # No first frame conditioning
+
+# Optimization configuration
+optimization:
+  learning_rate: 1.0e-4
+  steps: 10000  # More steps for text-only training
+  batch_size: 1  # Conservative for H100
+  gradient_accumulation_steps: 8  # Effective batch size = 8
+  max_grad_norm: 1.0
+  optimizer_type: "adamw"
+  scheduler_type: "cosine"
+  scheduler_params:
+    warmup_steps: 500
+  enable_gradient_checkpointing: true
+
+# Acceleration optimization
+acceleration:
+  mixed_precision_mode: "bf16"
+  quantization: null  # No quantization on H100
+  load_text_encoder_in_8bit: false
+  compile_with_inductor: false  # Disabled for compatibility
+  compilation_mode: "max-autotune"
+
+# Data configuration
+data:
+  preprocessed_data_root: "/workspace/LTX_video_training/preprocessed_official"
+  num_dataloader_workers: 16
+
+# Validation configuration
+validation:
+  prompts:
+    - "A cinematic landscape with beautiful lighting and smooth camera movement"
+    - "A person walking through a park with natural motion"
+    - "Autumn leaves falling and swirling in the wind"
+    - "A car driving down a winding mountain road"
+    - "Ocean waves gently rolling onto a sandy beach"
+  negative_prompt: "worst quality, inconsistent motion, blurry, jittery, distorted, unrealistic"
+  video_dims: [704, 1216, 121]  # [height, width, frames]
+  seed: 42
+  inference_steps: 50
+  interval: 10000  # Disabled to avoid OOM
+  videos_per_prompt: 1
+  guidance_scale: 3.5  # Based on official config
+  skip_initial_validation: true
+
+# Checkpoint configuration
+checkpoints:
+  interval: 500  # Save every 500 steps
+  keep_last_n: 10  # Keep last 10 checkpoints
+
+# Flow matching configuration
+flow_matching:
+  timestep_sampling_mode: "shifted_logit_normal"
+  timestep_sampling_params: {}
+
+# HuggingFace Hub configuration
+hub:
+  push_to_hub: false
+  hub_model_id: null
+
+# W&B configuration
+wandb:
+  enabled: false
+  project: "ltxv-standard-lora"
+  entity: null
+  tags: ["text-to-video", "lora", "h100", "realism"]
+  log_validation_videos: true
+
+# General configuration
+seed: 42
+output_dir: "/workspace/LTX_video_training/output/standard_text_lora"
