@@ -142,11 +142,126 @@ def test_proper_inference(args):
     return video, r_mean, g_mean, b_mean
 
 
+def test_with_lora(args, lora_path=None):
+    """Test with optional LoRA weights."""
+
+    from transformers import T5EncoderModel, T5Tokenizer
+    from diffusers import AutoencoderKLLTXVideo, LTXVideoTransformer3DModel
+    from diffusers.schedulers import FlowMatchEulerDiscreteScheduler
+    from safetensors.torch import load_file
+    from pathlib import Path
+
+    model_name = "BASE" if not lora_path else "LORA"
+    print("="*60)
+    print(f"Testing: {model_name}")
+    print("="*60)
+
+    # Load components
+    print("\nLoading components...")
+    tokenizer = T5Tokenizer.from_pretrained("Lightricks/LTX-Video", subfolder="tokenizer")
+    text_encoder = T5EncoderModel.from_pretrained("Lightricks/LTX-Video", subfolder="text_encoder", torch_dtype=torch.bfloat16)
+    vae = AutoencoderKLLTXVideo.from_pretrained("Lightricks/LTX-Video", subfolder="vae", torch_dtype=torch.bfloat16)
+    transformer = LTXVideoTransformer3DModel.from_pretrained("Lightricks/LTX-Video", subfolder="transformer", torch_dtype=torch.bfloat16)
+
+    # Load LoRA if provided
+    if lora_path:
+        print(f"Loading LoRA: {Path(lora_path).name}...")
+        lora_state_dict = load_file(lora_path)
+        missing, unexpected = transformer.load_state_dict(lora_state_dict, strict=False)
+        print(f"  ✓ LoRA loaded: {len(lora_state_dict)} keys")
+
+    scheduler = FlowMatchEulerDiscreteScheduler.from_pretrained("Lightricks/LTX-Video", subfolder="scheduler")
+
+    # Move to GPU
+    text_encoder = text_encoder.to("cuda")
+    vae = vae.to("cuda")
+    transformer = transformer.to("cuda")
+
+    # Create pipeline
+    pipe = LTXConditionPipeline(
+        transformer=transformer,
+        scheduler=scheduler,
+        vae=vae,
+        text_encoder=text_encoder,
+        tokenizer=tokenizer,
+    )
+
+    # Configure scheduler
+    latent_height = args.height // 8
+    latent_width = args.width // 8
+    image_seq_len = args.num_frames * latent_height * latent_width
+    mu = calculate_shift(image_seq_len)
+
+    if hasattr(pipe.scheduler.config, 'use_dynamic_shifting'):
+        pipe.scheduler.config.use_dynamic_shifting = False
+
+    pipe.vae.enable_tiling()
+
+    # Generate
+    print(f"\nGenerating...")
+    print(f"  Prompt: {args.prompt}")
+
+    generator = torch.Generator(device="cuda").manual_seed(args.seed)
+
+    with torch.inference_mode():
+        output = pipe(
+            prompt=args.prompt,
+            negative_prompt=args.negative_prompt,
+            height=args.height,
+            width=args.width,
+            num_frames=args.num_frames,
+            num_inference_steps=args.steps,
+            guidance_scale=1.0,
+            generator=generator,
+            decode_timestep=0.05,
+            image_cond_noise_scale=0.025,
+        )
+
+    # Extract frames
+    if hasattr(output, 'frames'):
+        video = output.frames[0]
+    elif hasattr(output, 'videos'):
+        video = output.videos[0]
+    else:
+        video = output[0]
+
+    if isinstance(video, list):
+        video = np.array(video)
+
+    if isinstance(video, torch.Tensor):
+        video = video.cpu().numpy()
+
+    if video.dtype != np.uint8:
+        if video.max() > 1.0:
+            video = video / 255.0
+        video = (video.clip(0, 1) * 255).astype(np.uint8)
+
+    # Analyze
+    r_mean = video[:,:,:,0].mean()
+    g_mean = video[:,:,:,1].mean()
+    b_mean = video[:,:,:,2].mean()
+    green_ratio = g_mean / ((r_mean + b_mean) / 2)
+
+    print(f"\nResults:")
+    print(f"  RGB means: R={r_mean:.1f}, G={g_mean:.1f}, B={b_mean:.1f}")
+    print(f"  Green ratio: {green_ratio:.2f}")
+
+    if green_ratio > 1.5:
+        print(f"  ⚠️  GREEN TINT")
+    elif green_ratio > 1.2:
+        print(f"  ⚠️  Slight green tint")
+    else:
+        print(f"  ✓ Colors balanced")
+
+    return video, r_mean, g_mean, b_mean
+
+
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--lora_path", type=str,
+                       default="output/trajectory_control_official/checkpoints/lora_weights_step_04750.safetensors")
     parser.add_argument("--prompt", type=str,
                        default="A scenic mountain landscape, camera slowly panning right")
-    parser.add_argument("--output", type=str, default="test_proper_settings.mp4")
     parser.add_argument("--negative_prompt", type=str,
                        default="worst quality, inconsistent motion, blurry")
     parser.add_argument("--height", type=int, default=704)
@@ -155,10 +270,46 @@ def main():
     parser.add_argument("--fps", type=int, default=30)
     parser.add_argument("--steps", type=int, default=50)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--test_lora", action="store_true", help="Test with LoRA comparison")
 
     args = parser.parse_args()
 
-    test_proper_inference(args)
+    if args.test_lora:
+        print("="*60)
+        print("BASE MODEL vs LoRA COMPARISON")
+        print("="*60)
+
+        # Test base
+        video_base, r_base, g_base, b_base = test_with_lora(args, lora_path=None)
+        print(f"\nSaving base model to proper_base.mp4...")
+        imageio.mimsave("proper_base.mp4", video_base, fps=args.fps)
+        print("  ✓ Saved")
+
+        # Clear memory
+        torch.cuda.empty_cache()
+
+        # Test LoRA
+        video_lora, r_lora, g_lora, b_lora = test_with_lora(args, lora_path=args.lora_path)
+        print(f"\nSaving LoRA to proper_lora.mp4...")
+        imageio.mimsave("proper_lora.mp4", video_lora, fps=args.fps)
+        print("  ✓ Saved")
+
+        # Compare
+        diff = abs(r_base - r_lora) + abs(g_base - g_lora) + abs(b_base - b_lora)
+        print("\n" + "="*60)
+        print("COMPARISON")
+        print("="*60)
+        print(f"BASE:  R={r_base:.1f}, G={g_base:.1f}, B={b_base:.1f}")
+        print(f"LORA:  R={r_lora:.1f}, G={g_lora:.1f}, B={b_lora:.1f}")
+        print(f"\nRGB difference: {diff:.1f}")
+
+        if diff < 5:
+            print("⚠️  Videos appear IDENTICAL - LoRA not activating")
+        else:
+            print("✓✓✓ Videos are DIFFERENT - LoRA is working!")
+        print("="*60)
+    else:
+        test_proper_inference(args)
 
 
 if __name__ == "__main__":
