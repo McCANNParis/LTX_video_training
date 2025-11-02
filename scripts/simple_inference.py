@@ -9,10 +9,25 @@ import os
 import argparse
 import torch
 
-# Add the trainer to path
-sys.path.insert(0, '/workspace/LTX_video_training/LTX-Video-Trainer')
+# Add the trainer to path - try to find it
+trainer_paths = [
+    '/workspace/LTX_video_training/LTX-Video-Trainer',
+    os.path.join(os.path.dirname(__file__), '..', 'LTX-Video-Trainer')
+]
 
-from ltxv_trainer.ltxv_pipeline import LTXVPipeline
+for path in trainer_paths:
+    if os.path.exists(path):
+        sys.path.insert(0, path)
+        break
+
+# Try importing, if fails use diffusers directly
+try:
+    from ltxv_trainer.ltxv_pipeline import LTXVPipeline
+    USE_TRAINER_PIPELINE = True
+except ImportError:
+    print("Warning: Could not import trainer pipeline, using diffusers...")
+    from diffusers import LTXPipeline as LTXVPipeline
+    USE_TRAINER_PIPELINE = False
 from transformers import T5EncoderModel, T5Tokenizer
 from diffusers import AutoencoderKLLTXVideo, LTXVideoTransformer3DModel
 from diffusers.schedulers import FlowMatchEulerDiscreteScheduler
