@@ -12,28 +12,61 @@ def fix_green_tint(video_path, output_path, green_reduction=0.6):
     """Reduce green channel to fix tint."""
 
     print(f"Loading {video_path}...")
-    video = imageio.mimread(video_path)
-    video = np.array(video)
 
-    print(f"Original shape: {video.shape}")
-    print(f"Original RGB means: R={video[:,:,:,0].mean():.1f}, G={video[:,:,:,1].mean():.1f}, B={video[:,:,:,2].mean():.1f}")
+    # Use reader to avoid memory issues
+    reader = imageio.get_reader(video_path)
+    fps = reader.get_meta_data().get('fps', 30)
 
-    # Reduce green channel
-    video_fixed = video.copy().astype(np.float32)
-    video_fixed[:,:,:,1] = video_fixed[:,:,:,1] * green_reduction
+    # Process frames in batches
+    frames_fixed = []
+    r_sum, g_sum, b_sum = 0, 0, 0
+    r_sum_fixed, g_sum_fixed, b_sum_fixed = 0, 0, 0
+    total_pixels = 0
 
-    # Renormalize to maintain brightness
-    mean_before = video.mean()
-    mean_after = video_fixed.mean()
-    video_fixed = video_fixed * (mean_before / mean_after)
+    print("Processing frames...")
+    for i, frame in enumerate(reader):
+        if i % 30 == 0:
+            print(f"  Frame {i}...")
 
-    video_fixed = np.clip(video_fixed, 0, 255).astype(np.uint8)
+        # Calculate stats for first frame
+        if i == 0:
+            print(f"  Frame shape: {frame.shape}")
+            print(f"  Original RGB: R={frame[:,:,0].mean():.1f}, G={frame[:,:,1].mean():.1f}, B={frame[:,:,2].mean():.1f}")
 
-    print(f"Fixed RGB means: R={video_fixed[:,:,:,0].mean():.1f}, G={video_fixed[:,:,:,1].mean():.1f}, B={video_fixed[:,:,:,2].mean():.1f}")
+        # Accumulate stats
+        r_sum += frame[:,:,0].sum()
+        g_sum += frame[:,:,1].sum()
+        b_sum += frame[:,:,2].sum()
+        total_pixels += frame.shape[0] * frame.shape[1]
 
-    print(f"Saving to {output_path}...")
-    fps = 30  # Default FPS
-    imageio.mimsave(output_path, video_fixed, fps=fps)
+        # Fix green channel
+        frame_fixed = frame.astype(np.float32)
+        frame_fixed[:,:,1] = frame_fixed[:,:,1] * green_reduction
+
+        # Renormalize to maintain brightness
+        mean_before = frame.mean()
+        mean_after = frame_fixed.mean()
+        frame_fixed = frame_fixed * (mean_before / mean_after)
+
+        frame_fixed = np.clip(frame_fixed, 0, 255).astype(np.uint8)
+
+        # Accumulate fixed stats
+        r_sum_fixed += frame_fixed[:,:,0].sum()
+        g_sum_fixed += frame_fixed[:,:,1].sum()
+        b_sum_fixed += frame_fixed[:,:,2].sum()
+
+        frames_fixed.append(frame_fixed)
+
+    reader.close()
+
+    # Print overall stats
+    num_frames = len(frames_fixed)
+    print(f"\nProcessed {num_frames} frames")
+    print(f"Original RGB means: R={r_sum/(total_pixels*num_frames):.1f}, G={g_sum/(total_pixels*num_frames):.1f}, B={b_sum/(total_pixels*num_frames):.1f}")
+    print(f"Fixed RGB means: R={r_sum_fixed/(total_pixels*num_frames):.1f}, G={g_sum_fixed/(total_pixels*num_frames):.1f}, B={b_sum_fixed/(total_pixels*num_frames):.1f}")
+
+    print(f"\nSaving to {output_path}...")
+    imageio.mimsave(output_path, frames_fixed, fps=fps)
 
     print("✓ Done!")
 
