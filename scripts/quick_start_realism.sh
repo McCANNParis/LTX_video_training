@@ -61,8 +61,8 @@ if [ ! -d "raw_videos" ] || [ $VIDEO_COUNT -eq 0 ] || [ $CAPTION_COUNT -eq 0 ]; 
 else
     echo -e "${GREEN}✓ Found $VIDEO_COUNT videos and $CAPTION_COUNT captions${NC}"
 
-    # Check if preprocessed
-    if [ ! -d "preprocessed_realism/.precomputed" ]; then
+    # Check if preprocessed (check for conditions and latents directories)
+    if [ ! -d "preprocessed_realism/conditions" ] || [ ! -d "preprocessed_realism/latents" ]; then
         echo ""
         echo "Dataset needs preprocessing..."
         read -p "Run preprocessing now? (y/n) " -n 1 -r

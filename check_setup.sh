@@ -45,11 +45,12 @@ fi
 echo ""
 
 # Check if preprocessed
-if [ -d "preprocessed_realism/.precomputed" ]; then
+if [ -d "preprocessed_realism/conditions" ] && [ -d "preprocessed_realism/latents" ]; then
     echo "✓ Preprocessed data found"
+    echo "  Directories: conditions/, latents/"
     echo "  Status: READY TO TRAIN"
     echo ""
-    echo "Next step: ./scripts/train_realism_lora.sh"
+    echo "Next step: export TORCH_COMPILE_DISABLE=1 && ./scripts/train_realism_lora.sh"
 else
     echo "○ Not yet preprocessed"
 fi

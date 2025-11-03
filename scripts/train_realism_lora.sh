@@ -35,8 +35,8 @@ if [ ! -f "LTX-Video-Trainer/configs/realism_lora.yaml" ]; then
     exit 1
 fi
 
-# Check preprocessed data
-if [ ! -d "preprocessed_realism/.precomputed" ]; then
+# Check preprocessed data (conditions and latents directories)
+if [ ! -d "preprocessed_realism/conditions" ] || [ ! -d "preprocessed_realism/latents" ]; then
     echo -e "${RED}Error: Preprocessed data not found!${NC}"
     echo "Run dataset preparation first:"
     echo "  ./scripts/prepare_for_realism_training.sh"
@@ -46,6 +46,10 @@ if [ ! -d "preprocessed_realism/.precomputed" ]; then
     echo "    video_001.mp4"
     echo "    video_001.txt"
     echo "    ..."
+    echo ""
+    echo "Expected directories:"
+    echo "  preprocessed_realism/conditions/"
+    echo "  preprocessed_realism/latents/"
     exit 1
 fi
 
@@ -54,7 +58,7 @@ if [ -f "dataset_realism.json" ]; then
     VIDEO_COUNT=$(python3 -c "import json; print(len(json.load(open('dataset_realism.json'))))")
     echo "Dataset: $VIDEO_COUNT videos"
 else
-    echo "Dataset: preprocessed_realism/.precomputed/"
+    echo "Dataset: preprocessed_realism/"
 fi
 echo ""
 
