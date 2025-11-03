@@ -75,9 +75,9 @@ for video_file in sorted(raw_videos_dir.glob('*.mp4')):
         print(f"Warning: Empty caption for {video_file.name}, skipping...")
         continue
 
-    # Add to dataset (no reference_video for text-only training)
+    # Add to dataset (use just filename, not full path, to avoid subdirectories)
     dataset_json.append({
-        "video": str(video_file.absolute()),
+        "video": video_file.name,  # Just filename, e.g., "video.mp4"
         "caption": caption
     })
 
@@ -108,11 +108,13 @@ export PYTHONPATH=/workspace/LTX_video_training/LTX-Video-Trainer:$PYTHONPATH
 # Preprocess without reference videos
 # Resolution format: "WxHxF" (width x height x frames)
 # We use 704x1216x121 for our videos
+# Use --media-dir to point to raw_videos since dataset JSON now uses relative paths
 python scripts/preprocess_dataset.py \
     /workspace/LTX_video_training/dataset_realism.json \
     --resolution-buckets "704x1216x121" \
     --video-column "video" \
     --caption-column "caption" \
+    --media-dir /workspace/LTX_video_training/raw_videos \
     --output-dir /workspace/LTX_video_training/preprocessed_realism \
     --vae-tiling \
     --batch-size 1
