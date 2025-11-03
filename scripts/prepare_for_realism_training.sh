@@ -75,9 +75,9 @@ for video_file in sorted(raw_videos_dir.glob('*.mp4')):
         print(f"Warning: Empty caption for {video_file.name}, skipping...")
         continue
 
-    # Add to dataset (use just filename, not full path, to avoid subdirectories)
+    # Add to dataset with absolute path
     dataset_json.append({
-        "video": video_file.name,  # Just filename, e.g., "video.mp4"
+        "video": str(video_file.absolute()),
         "caption": caption
     })
 
@@ -108,16 +108,32 @@ export PYTHONPATH=/workspace/LTX_video_training/LTX-Video-Trainer:$PYTHONPATH
 # Preprocess without reference videos
 # Resolution format: "WxHxF" (width x height x frames)
 # We use 704x1216x121 for our videos
-# Use --media-dir to point to raw_videos since dataset JSON now uses relative paths
 python scripts/preprocess_dataset.py \
     /workspace/LTX_video_training/dataset_realism.json \
     --resolution-buckets "704x1216x121" \
     --video-column "video" \
     --caption-column "caption" \
-    --media-dir /workspace/LTX_video_training/raw_videos \
     --output-dir /workspace/LTX_video_training/preprocessed_realism \
     --vae-tiling \
     --batch-size 1
+
+# Move files from nested subdirectory to correct location
+# The preprocessing creates conditions/raw_videos/*.pt and latents/raw_videos/*.pt
+# But we need them in conditions/*.pt and latents/*.pt
+cd /workspace/LTX_video_training
+
+if [ -d "preprocessed_realism/conditions/raw_videos" ]; then
+    echo ""
+    echo "Moving condition files to correct location..."
+    mv preprocessed_realism/conditions/raw_videos/*.pt preprocessed_realism/conditions/ 2>/dev/null || true
+    rmdir preprocessed_realism/conditions/raw_videos 2>/dev/null || true
+fi
+
+if [ -d "preprocessed_realism/latents/raw_videos" ]; then
+    echo "Moving latent files to correct location..."
+    mv preprocessed_realism/latents/raw_videos/*.pt preprocessed_realism/latents/ 2>/dev/null || true
+    rmdir preprocessed_realism/latents/raw_videos 2>/dev/null || true
+fi
 
 echo ""
 echo "✓ Preprocessing complete!"
