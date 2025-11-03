@@ -22,12 +22,24 @@ echo ""
 # Navigate to trainer directory
 cd /workspace/LTX_video_training/LTX-Video-Trainer
 
-# Check if preprocessed data exists
-if [ ! -d "/workspace/LTX_video_training/preprocessed_official" ]; then
-    echo "ERROR: Preprocessed data not found!"
-    echo "Run preprocessing first:"
-    echo "  python -m ltxv_trainer.cli preprocess --config ../configs/standard_text_lora_h100.yaml"
+# Check if raw data exists
+if [ ! -d "/workspace/LTX_video_training/raw_videos" ]; then
+    echo "ERROR: Raw videos not found at /workspace/LTX_video_training/raw_videos/"
+    echo "Please ensure your videos and .txt caption files are in that directory"
     exit 1
+fi
+
+# Check if preprocessed data exists, if not, run preprocessing
+if [ ! -d "/workspace/LTX_video_training/preprocessed_standard" ]; then
+    echo "Preprocessed data not found. Running preprocessing..."
+    echo ""
+
+    python -m ltxv_trainer.cli preprocess \
+        --config ../configs/standard_text_lora_h100.yaml
+
+    echo ""
+    echo "Preprocessing complete!"
+    echo ""
 fi
 
 # Create output directory

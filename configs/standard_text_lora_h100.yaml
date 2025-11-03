@@ -49,7 +49,8 @@ acceleration:
 
 # Data configuration
 data:
-  preprocessed_data_root: "/workspace/LTX_video_training/preprocessed_official"
+  raw_data_root: "/workspace/LTX_video_training/raw_videos"  # Source: videos + .txt captions
+  preprocessed_data_root: "/workspace/LTX_video_training/preprocessed_standard"  # Output
   num_dataloader_workers: 16
 
 # Validation configuration
