@@ -71,9 +71,23 @@ Thumbs.db
 # Accelerate
 .accelerate/
 
+# LTX-Video-Trainer (cloned separately, only keep our custom configs)
+LTX-Video-Trainer/*
+!LTX-Video-Trainer/configs/
+!LTX-Video-Trainer/configs/realism_lora.yaml
+!LTX-Video-Trainer/configs/trajectory_control_h100.yaml
+
+# Raw videos and preprocessed data
+raw_videos/
+preprocessed_realism/
+dataset_realism.json
+
 # Keep directory structure but ignore contents
 !dataset/.gitkeep
 !models/.gitkeep
 !output/.gitkeep
 !checkpoints/.gitkeep
 !logs/.gitkeep
+LTX-Video-Trainer/configs/*.yaml
+!LTX-Video-Trainer/configs/realism_lora.yaml
+!LTX-Video-Trainer/configs/trajectory_control_h100.yaml
