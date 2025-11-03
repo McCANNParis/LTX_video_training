@@ -35,23 +35,27 @@ if [ ! -f "LTX-Video-Trainer/configs/realism_lora.yaml" ]; then
     exit 1
 fi
 
-# Check dataset
-VIDEO_COUNT=$(ls -1 dataset/videos/*.mp4 2>/dev/null | wc -l)
-if [ $VIDEO_COUNT -eq 0 ]; then
-    echo -e "${RED}Error: No videos found in dataset!${NC}"
-    echo "Please ensure dataset/videos/ contains training videos"
-    exit 1
-fi
-
 # Check preprocessed data
 if [ ! -d "preprocessed_realism/.precomputed" ]; then
     echo -e "${RED}Error: Preprocessed data not found!${NC}"
     echo "Run dataset preparation first:"
     echo "  ./scripts/prepare_for_realism_training.sh"
+    echo ""
+    echo "Make sure you have your videos and captions in raw_videos/ first:"
+    echo "  raw_videos/"
+    echo "    video_001.mp4"
+    echo "    video_001.txt"
+    echo "    ..."
     exit 1
 fi
 
-echo "Dataset: $VIDEO_COUNT videos"
+# Count videos from dataset manifest
+if [ -f "dataset_realism.json" ]; then
+    VIDEO_COUNT=$(python3 -c "import json; print(len(json.load(open('dataset_realism.json'))))")
+    echo "Dataset: $VIDEO_COUNT videos"
+else
+    echo "Dataset: preprocessed_realism/.precomputed/"
+fi
 echo ""
 
 # Detect number of GPUs

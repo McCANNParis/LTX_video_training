@@ -40,18 +40,23 @@ echo ""
 
 # Step 2: Check dataset
 echo -e "${YELLOW}[STEP 2/4]${NC} Checking dataset..."
-VIDEO_COUNT=$(ls -1 dataset/videos/*.mp4 2>/dev/null | wc -l)
-CAPTION_COUNT=$(ls -1 dataset/captions/*.txt 2>/dev/null | wc -l)
+VIDEO_COUNT=$(ls -1 raw_videos/*.mp4 2>/dev/null | wc -l)
+CAPTION_COUNT=$(ls -1 raw_videos/*.txt 2>/dev/null | wc -l)
 
-if [ $VIDEO_COUNT -eq 0 ] || [ $CAPTION_COUNT -eq 0 ]; then
+if [ ! -d "raw_videos" ] || [ $VIDEO_COUNT -eq 0 ] || [ $CAPTION_COUNT -eq 0 ]; then
     echo -e "${RED}✗ Dataset not found${NC}"
     echo ""
     echo "Your dataset should have this structure:"
-    echo "  dataset/"
-    echo "    videos/       # Your MP4 videos"
-    echo "    captions/     # Matching .txt caption files"
+    echo "  raw_videos/"
+    echo "    video_001.mp4"
+    echo "    video_001.txt"
+    echo "    video_002.mp4"
+    echo "    video_002.txt"
+    echo "    ..."
     echo ""
-    echo "Please add your training data to dataset/ and run this script again."
+    echo "Each .mp4 file should have a matching .txt file with the same name."
+    echo ""
+    echo "Please add your training data to raw_videos/ and run this script again."
     exit 1
 else
     echo -e "${GREEN}✓ Found $VIDEO_COUNT videos and $CAPTION_COUNT captions${NC}"

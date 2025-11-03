@@ -39,16 +39,17 @@ This guide covers training a **simple text-to-video LoRA** to improve realism in
 Your dataset should have the following structure:
 
 ```
-dataset/
-├── videos/           # Your training videos (MP4)
-│   ├── video_001.mp4
-│   ├── video_002.mp4
-│   └── ...
-└── captions/         # Text descriptions (TXT)
-    ├── video_001.txt
-    ├── video_002.txt
-    └── ...
+raw_videos/           # All your training data in one folder
+├── video_001.mp4     # Video file
+├── video_001.txt     # Caption file (same name as video)
+├── video_002.mp4
+├── video_002.txt
+├── video_003.mp4
+├── video_003.txt
+└── ...
 ```
+
+**Important:** Each `.mp4` video file must have a corresponding `.txt` caption file with the exact same name.
 
 **Video Requirements:**
 - Format: MP4
@@ -60,7 +61,8 @@ dataset/
 **Caption Requirements:**
 - Format: Plain text files (.txt)
 - One caption per video
-- Filename matches video (e.g., `video_001.mp4` → `video_001.txt`)
+- Filename must match video exactly (e.g., `video_001.mp4` → `video_001.txt`)
+- Placed in the same `raw_videos/` directory
 - Content: Descriptive text with focus on realism aspects
   - Good: "A person walking in a park, photorealistic, natural lighting, detailed features"
   - Avoid: "A person walking in a park" (too generic)
@@ -359,10 +361,14 @@ LTX_video_training/
 ├── scripts/
 │   ├── prepare_for_realism_training.sh      # Dataset preprocessing
 │   ├── train_realism_lora.sh                # Training launcher
-│   └── test_realism_lora.py                 # Inference testing
-├── dataset/
-│   ├── videos/                              # Your training videos
-│   └── captions/                            # Your captions
+│   ├── test_realism_lora.py                 # Inference testing
+│   └── quick_start_realism.sh               # Interactive quick start
+├── raw_videos/                              # Your training data
+│   ├── video_001.mp4                        # Video files
+│   ├── video_001.txt                        # Caption files (matching names)
+│   ├── video_002.mp4
+│   ├── video_002.txt
+│   └── ...
 ├── dataset_realism.json                     # Dataset manifest (auto-generated)
 ├── preprocessed_realism/                    # Preprocessed data (auto-generated)
 ├── output/
@@ -377,8 +383,9 @@ LTX_video_training/
 
 1. **Gather high-quality video footage** matching your target use case
 2. **Write detailed captions** focusing on realism aspects
-3. **Run the 3-step workflow**: setup → prepare → train
-4. **Test checkpoints** to find the best one
-5. **Iterate**: Adjust config based on results and retrain if needed
+3. **Place both in `raw_videos/`** with matching filenames (video_001.mp4 + video_001.txt)
+4. **Run the quick start guide**: `./scripts/quick_start_realism.sh`
+5. **Test checkpoints** to find the best one
+6. **Iterate**: Adjust config based on results and retrain if needed
 
 Good luck with your realism LoRA training! 🎥

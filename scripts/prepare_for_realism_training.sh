@@ -11,32 +11,40 @@ echo "Preparing Data for Realism LoRA Training"
 echo "========================================"
 echo ""
 
-# Check if dataset exists
-if [ ! -d "dataset/videos" ]; then
-    echo "Error: Dataset not found. Please ensure dataset/videos/ contains training videos!"
+# Check if raw_videos directory exists
+if [ ! -d "raw_videos" ]; then
+    echo "Error: raw_videos/ directory not found!"
+    echo ""
+    echo "Please create the directory and add your training data:"
+    echo "  mkdir -p raw_videos"
+    echo "  # Add your video files (.mp4) and caption files (.txt) with matching names"
+    echo ""
+    echo "Example structure:"
+    echo "  raw_videos/"
+    echo "    video_001.mp4"
+    echo "    video_001.txt"
+    echo "    video_002.mp4"
+    echo "    video_002.txt"
     exit 1
 fi
 
-if [ ! -d "dataset/captions" ]; then
-    echo "Error: Captions not found. Please ensure dataset/captions/ contains caption files!"
-    exit 1
-fi
-
-# Count videos
-VIDEO_COUNT=$(ls -1 dataset/videos/*.mp4 2>/dev/null | wc -l)
-CAPTION_COUNT=$(ls -1 dataset/captions/*.txt 2>/dev/null | wc -l)
+# Count videos and captions
+VIDEO_COUNT=$(ls -1 raw_videos/*.mp4 2>/dev/null | wc -l)
+CAPTION_COUNT=$(ls -1 raw_videos/*.txt 2>/dev/null | wc -l)
 
 echo "Found $VIDEO_COUNT training videos"
 echo "Found $CAPTION_COUNT caption files"
 echo ""
 
 if [ "$VIDEO_COUNT" -eq 0 ]; then
-    echo "Error: No videos found in dataset/videos/"
+    echo "Error: No videos found in raw_videos/"
+    echo "Please add .mp4 files to raw_videos/"
     exit 1
 fi
 
 if [ "$CAPTION_COUNT" -eq 0 ]; then
-    echo "Error: No captions found in dataset/captions/"
+    echo "Error: No captions found in raw_videos/"
+    echo "Please add .txt caption files to raw_videos/"
     exit 1
 fi
 
@@ -48,15 +56,12 @@ import json
 from pathlib import Path
 
 dataset_json = []
+raw_videos_dir = Path('raw_videos')
 
-# Get all videos
-videos_dir = Path('dataset/videos')
-captions_dir = Path('dataset/captions')
-
-for video_file in sorted(videos_dir.glob('*.mp4')):
-    # Find corresponding caption file
-    # Assuming caption file has same name with .txt extension
-    caption_file = captions_dir / f"{video_file.stem}.txt"
+# Get all videos in raw_videos/
+for video_file in sorted(raw_videos_dir.glob('*.mp4')):
+    # Find corresponding caption file (same name with .txt extension)
+    caption_file = raw_videos_dir / f"{video_file.stem}.txt"
 
     if not caption_file.exists():
         print(f"Warning: No caption found for {video_file.name}, skipping...")
@@ -66,11 +71,20 @@ for video_file in sorted(videos_dir.glob('*.mp4')):
     with open(caption_file, 'r') as f:
         caption = f.read().strip()
 
+    if not caption:
+        print(f"Warning: Empty caption for {video_file.name}, skipping...")
+        continue
+
     # Add to dataset (no reference_video for text-only training)
     dataset_json.append({
         "video": str(video_file.absolute()),
         "caption": caption
     })
+
+if len(dataset_json) == 0:
+    print("Error: No valid video+caption pairs found!")
+    print("Make sure each .mp4 file has a corresponding .txt file with the same name.")
+    exit(1)
 
 # Save dataset.json
 with open('dataset_realism.json', 'w') as f:

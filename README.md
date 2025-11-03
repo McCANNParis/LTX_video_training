@@ -1,8 +1,43 @@
-# LTX Video Training - Trajectory Control
+# LTX Video Training
 
-Production-ready system for training LTX Video 13B with trajectory-guided motion control on RunPod. Optimized for H100 GPUs.
+Production-ready system for training LTX Video 13B on RunPod. Optimized for H100 GPUs.
 
-## Quick Start (3 Commands)
+## 🎯 Two Training Modes Available
+
+### 1. **Realism LoRA** (Simple Text-to-Video) 🆕
+Train a LoRA to improve video realism using **text prompts only**. No trajectory visualizations needed!
+
+**Quick Start:**
+```bash
+# Interactive guide
+./scripts/quick_start_realism.sh
+
+# Or manually:
+# 1. Add videos+captions to raw_videos/
+# 2. Preprocess
+./scripts/prepare_for_realism_training.sh
+# 3. Train
+export TORCH_COMPILE_DISABLE=1 && ./scripts/train_realism_lora.sh
+```
+
+📚 **See [REALISM_LORA_GUIDE.md](REALISM_LORA_GUIDE.md) for complete documentation**
+
+**Dataset structure:**
+```
+raw_videos/
+  video_001.mp4
+  video_001.txt    # Caption with same name
+  video_002.mp4
+  video_002.txt
+  ...
+```
+
+---
+
+### 2. **Trajectory Control** (IC-LoRA for Motion Control)
+Train an IC-LoRA for precise motion control using reference trajectory videos.
+
+## Quick Start - Trajectory Control (3 Commands)
 
 ```bash
 # 1. Setup official trainer
