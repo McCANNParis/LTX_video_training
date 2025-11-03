@@ -23,7 +23,7 @@ lora:
 
 # Conditioning configuration - TEXT ONLY (no trajectory)
 conditioning:
-  mode: "text_only"  # No reference video conditioning
+  mode: "none"  # No reference video conditioning (text-only training)
   first_frame_conditioning_p: 0.0  # Disabled for text-only training
 
 # Optimization configuration
