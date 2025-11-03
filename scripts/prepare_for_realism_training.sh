@@ -117,20 +117,26 @@ python scripts/preprocess_dataset.py \
     --vae-tiling \
     --batch-size 1
 
-# Move files from nested subdirectory to correct location
-# The preprocessing creates conditions/raw_videos/*.pt and latents/raw_videos/*.pt
-# But we need them in conditions/*.pt and latents/*.pt
+# Fix preprocessing bug: conditions are saved to raw_videos/ instead of preprocessed_realism/conditions/
+# This happens because the preprocessing script uses absolute paths incorrectly
 cd /workspace/LTX_video_training
 
+echo ""
+echo "Moving preprocessed files to correct locations..."
+
+# Move conditions from raw_videos/ to preprocessed_realism/conditions/
+if [ -f "raw_videos/*.pt" ] 2>/dev/null; then
+    mv raw_videos/*.pt preprocessed_realism/conditions/ 2>/dev/null && \
+        echo "✓ Moved condition files from raw_videos/ to preprocessed_realism/conditions/"
+fi
+
+# Also check for nested subdirectories (in case preprocessing behavior changes)
 if [ -d "preprocessed_realism/conditions/raw_videos" ]; then
-    echo ""
-    echo "Moving condition files to correct location..."
     mv preprocessed_realism/conditions/raw_videos/*.pt preprocessed_realism/conditions/ 2>/dev/null || true
     rmdir preprocessed_realism/conditions/raw_videos 2>/dev/null || true
 fi
 
 if [ -d "preprocessed_realism/latents/raw_videos" ]; then
-    echo "Moving latent files to correct location..."
     mv preprocessed_realism/latents/raw_videos/*.pt preprocessed_realism/latents/ 2>/dev/null || true
     rmdir preprocessed_realism/latents/raw_videos 2>/dev/null || true
 fi
