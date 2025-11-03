@@ -6,7 +6,7 @@ echo "Realism LoRA Training - Setup Checker"
 echo "========================================"
 echo ""
 
-BASE_DIR="/home/user/LTX_video_training"
+BASE_DIR="/workspace/LTX_video_training"
 cd "$BASE_DIR"
 
 echo "Base directory: $BASE_DIR"
